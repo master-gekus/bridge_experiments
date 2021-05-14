@@ -6,8 +6,9 @@
 #include <array>
 #include <iostream>
 #include <limits>
-#include <type_traits>
 #include <string>
+#include <type_traits>
+#include <vector>
 
 #include <yaml-cpp/yaml.h>
 
@@ -28,8 +29,8 @@ enum card : uint16_t
 	Ace = (1 << 12),
 };
 
-card next_card_from_string(const char* &str);
-const char* to_string(card c);
+card next_card_from_string(const char*& str);
+const char* to_string(card c) noexcept;
 
 enum suit : uint8_t
 {
@@ -60,11 +61,13 @@ public:
 
 	inline explicit cards(const std::string& str)
 		: cards {str.c_str()}
-	{}
+	{
+	}
 
 	inline explicit cards(const YAML::Node& n)
 		: cards {n.IsNull() ? "" : n.as<std::string>().c_str()}
-	{}
+	{
+	}
 
 	~cards() = default;
 	cards(const cards&) = default;
@@ -79,12 +82,51 @@ private:
 	underlying_type cards_;
 };
 
-enum sides : uint8_t
+class side
 {
-	North = 0,
-	East = 1,
-	South = 2,
-	West = 3,
+public:
+	enum sides : uint8_t
+	{
+		North = 0,
+		East = 1,
+		South = 2,
+		West = 3,
+	};
+
+	inline constexpr side() noexcept
+		: side_ {0}
+	{
+	}
+
+	inline constexpr side(sides v)
+		: side_ {static_cast<uint8_t>(static_cast<uint8_t>(v) % 4)}
+	{
+	}
+
+	template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	inline constexpr side(T v)
+		: side_ {static_cast<uint8_t>(v % 4)}
+	{
+	}
+
+	template <typename T>
+	inline constexpr std::enable_if_t<std::is_integral_v<T>, side>
+	operator+(T term) const noexcept
+	{
+		return side {side_ + term};
+	}
+
+	~side() = default;
+	side(const side&) = default;
+	side(side&&) = default;
+	side& operator=(const side&) = default;
+	side& operator=(side&&) = default;
+
+public:
+	const char* to_string() const noexcept;
+
+private:
+	uint8_t side_;
 };
 
 class hand
@@ -136,19 +178,19 @@ public:
 
 private:
 	std::array<hand, 4> hands_;
+	side turn_starter_;
+	std::vector<uint8_t> moves_;
 };
-
-inline std::istream& operator>>(std::istream& is, cards& c)
-{
-	std::string s;
-	is >> s;
-	c = cards {s};
-	return is;
-}
 
 inline std::ostream& operator<<(std::ostream& os, const cards& c)
 {
 	os << c.to_string();
+	return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const side& s)
+{
+	os << s.to_string();
 	return os;
 }
 

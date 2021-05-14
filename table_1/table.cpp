@@ -45,7 +45,7 @@ card next_card_from_string(const char*& str)
 	throw std::invalid_argument {"invalid character in string passed into next_card_from_string()"};
 }
 
-const char* to_string(card c)
+const char* to_string(card c) noexcept
 {
 	switch (c)
 	{
@@ -118,6 +118,23 @@ std::string cards::to_string() const
 	return res;
 };
 
+const char* side::to_string() const noexcept
+{
+	switch (static_cast<sides>(side_))
+	{
+	case North:
+		return "North";
+	case East:
+		return "East";
+	case South:
+		return "South";
+	case West:
+		return "West";
+	default:
+		return "<invalid>";
+	}
+}
+
 void hand::dump(std::ostream& os)
 {
 	os << "    C: " << suites_[0] << std::endl;
@@ -128,15 +145,12 @@ void hand::dump(std::ostream& os)
 
 void table::dump(std::ostream& os)
 {
-	std::cout << "  N:" << std::endl;
-	hands_[0].dump(os);
+	for (std::size_t i = 0; i < hands_.size(); ++i)
+	{
+		std::cout << "  " << side {i} << ":" << std::endl;
+		hands_[i].dump(os);
+	}
 
-	std::cout << "  E:" << std::endl;
-	hands_[1].dump(os);
-
-	std::cout << "  S:" << std::endl;
-	hands_[2].dump(os);
-
-	std::cout << "  W:" << std::endl;
-	hands_[3].dump(os);
+	std::cout << "  Turn starter : " << turn_starter_ << std::endl;
+	std::cout << "  Next move    : " << turn_starter_ + moves_.size() << std::endl;
 }
