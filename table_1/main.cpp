@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include <stdexcept>
 
 #include "table.h"

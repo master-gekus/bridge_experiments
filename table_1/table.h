@@ -32,13 +32,47 @@ enum card : uint16_t
 card next_card_from_string(const char*& str);
 const char* to_string(card c) noexcept;
 
-enum suit : uint8_t
+class suit
 {
-	Clubs = 0,
-	Diamonds = 1,
-	Hearts = 2,
-	Spades = 3,
-	NoTrump = std::numeric_limits<std::underlying_type_t<suit>>::max(),
+public:
+	enum suits : uint8_t
+	{
+		Clubs = 0,
+		Diamonds = 1,
+		Hearts = 2,
+		Spades = 3,
+		NoTrump = std::numeric_limits<uint8_t>::max(),
+	};
+
+	inline constexpr suit() noexcept
+		: suit_ {0}
+	{
+	}
+
+	inline constexpr suit(suits s) noexcept
+		: suit_ {static_cast<uint8_t>(static_cast<uint8_t>(s) % 4)}
+	{
+	}
+
+	template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+	inline explicit constexpr suit(T s)
+		: suit_ {static_cast<uint8_t>(s % 4)}
+	{
+	}
+
+	explicit suit(const char* str, bool allow_nt = false);
+
+	inline explicit suit(const YAML::Node& n, bool allow_nt = false)
+		: suit {n.as<std::string>().c_str(), allow_nt}
+	{
+	}
+
+public:
+	const char* to_string() const noexcept;
+	const char* to_string_short() const noexcept;
+
+private:
+	uint8_t suit_;
 };
 
 class cards
@@ -170,6 +204,7 @@ public:
 
 	inline explicit table(const YAML::Node& n)
 		: hands_ {hand {n["N"]}, hand {n["E"]}, hand {n["S"]}, hand {n["W"]}}
+		, trump_ {n["T"], true}
 	{
 	}
 
@@ -178,19 +213,19 @@ public:
 
 private:
 	std::array<hand, 4> hands_;
+	suit trump_;
 	side turn_starter_;
 	std::vector<uint8_t> moves_;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const cards& c)
+template <typename T, typename... Types>
+using is_one_of = std::disjunction<std::is_same<T, Types>...>;
+
+template <typename T>
+inline std::enable_if_t<is_one_of<T, cards, suit, side>::value, std::ostream&>
+operator<<(std::ostream& os, const T& c)
 {
 	os << c.to_string();
-	return os;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const side& s)
-{
-	os << s.to_string();
 	return os;
 }
 

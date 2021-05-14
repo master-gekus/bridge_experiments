@@ -2,6 +2,7 @@
 
 #include <cctype>
 
+#include <iomanip>
 #include <stdexcept>
 
 card next_card_from_string(const char*& str)
@@ -135,12 +136,83 @@ const char* side::to_string() const noexcept
 	}
 }
 
+suit::suit(const char* str, bool allow_nt)
+{
+	if (nullptr == str)
+	{
+		throw std::invalid_argument {"nullptr passed into suit::suit()"};
+	}
+
+	const auto* s {str};
+	switch (std::toupper(*(s++)))
+	{
+	case '\0':
+		throw std::invalid_argument {"empty string into suit::suit()"};
+	case 'C':
+		suit_ = static_cast<uint8_t>(Clubs);
+		break;
+	case 'D':
+		suit_ = static_cast<uint8_t>(Diamonds);
+		break;
+	case 'H':
+		suit_ = static_cast<uint8_t>(Hearts);
+		break;
+	case 'S':
+		suit_ = static_cast<uint8_t>(Spades);
+		break;
+	case 'N':
+		if ('T' != std::toupper(*(s++)))
+		{
+			s -= 2;
+			break;
+		}
+		if (!allow_nt)
+		{
+			throw std::invalid_argument {"NT suit is not allowed."};
+		}
+		suit_ = static_cast<uint8_t>(NoTrump);
+		break;
+	default:
+		--s;
+		break;
+	}
+
+	if ('\0' != (*s))
+	{
+		throw std::invalid_argument {"string \"" + std::string {str} + "\" can not be parsed as valid suit"};
+	}
+}
+
+const char* suit::to_string() const noexcept
+{
+	switch (static_cast<suits>(suit_))
+	{
+	case Clubs:
+		return "Clubs";
+	case Diamonds:
+		return "Diamonds";
+	case Hearts:
+		return "Hearts";
+	case Spades:
+		return "Spades";
+	case NoTrump:
+		return "No Trump";
+	default:
+		return "<invalid>";
+	}
+}
+
+//const char* suit::to_string_short() const noexcept
+//{
+
+//}
+
 void hand::dump(std::ostream& os)
 {
-	os << "    C: " << suites_[0] << std::endl;
-	os << "    D: " << suites_[1] << std::endl;
-	os << "    H: " << suites_[2] << std::endl;
-	os << "    S: " << suites_[3] << std::endl;
+	for (std::size_t i = 0; i < suites_.size(); ++i)
+	{
+		os << std::setw(12) << suit {i} << " : " << suites_[i] << std::endl;
+	}
 }
 
 void table::dump(std::ostream& os)
@@ -151,6 +223,7 @@ void table::dump(std::ostream& os)
 		hands_[i].dump(os);
 	}
 
+	std::cout << "  Trump        : " << trump_ << std::endl;
 	std::cout << "  Turn starter : " << turn_starter_ << std::endl;
 	std::cout << "  Next move    : " << turn_starter_ + moves_.size() << std::endl;
 }
