@@ -117,3 +117,11 @@ std::string cards::to_string() const
 
 	return res;
 };
+
+void hand::dump(std::ostream& os)
+{
+	os << "    C: " << suites_[0] << std::endl;
+	os << "    D: " << suites_[1] << std::endl;
+	os << "    H: " << suites_[2] << std::endl;
+	os << "    S: " << suites_[3] << std::endl;
+}

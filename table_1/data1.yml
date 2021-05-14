@@ -1,9 +1,25 @@
-- North:
-  East: AK
-  South: 102
-  West: JQ
+- N:
+    C: A
+    D: K
+    H: Q
+    S: J
+  E:
+    C: 10
+    D: 9
+    H: 8
+    S: 7
+  S:
+    C: 6
+    D: 5
+    H: 4
+    S: 3
+  W:
+    C: 2
+    D: A
+    H: K
+    S: Q
 
-- North: 102
-  East: AK
-  South: 102
-  West: JQ
+#- North: 102
+#  East: AK
+#  South: 102
+#  West: JQ

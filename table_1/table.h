@@ -2,6 +2,8 @@
 #define TABLE_H
 
 #include <cstdint>
+
+#include <array>
 #include <iostream>
 #include <limits>
 #include <type_traits>
@@ -61,7 +63,7 @@ public:
 	{}
 
 	inline explicit cards(const YAML::Node& n)
-		: cards {((!n.IsDefined()) || n.IsNull()) ? "" : n.as<std::string>().c_str()}
+		: cards {n.IsNull() ? "" : n.as<std::string>().c_str()}
 	{}
 
 	~cards() = default;
@@ -83,6 +85,32 @@ enum sides : uint8_t
 	East = 1,
 	South = 2,
 	West = 3,
+};
+
+class hand
+{
+public:
+	hand() = default;
+	~hand() = default;
+
+	hand(const hand&) = default;
+	hand(hand&&) = default;
+	hand& operator=(const hand&) = default;
+	hand& operator=(hand&&) = default;
+
+	inline hand(const char* c, const char* d, const char* h, const char* s)
+		: suites_ {cards {c}, cards {d}, cards{h}, cards{s}}
+	{}
+
+	inline explicit hand(const YAML::Node& n)
+		: suites_ {cards {n["C"]}, cards {n["D"]}, cards{n["H"]}, cards{n["S"]}}
+	{}
+
+public:
+	void dump(std::ostream& os = std::cout);
+
+private:
+	std::array<cards, 4> suites_;
 };
 
 inline std::istream& operator>>(std::istream& is, cards& c)

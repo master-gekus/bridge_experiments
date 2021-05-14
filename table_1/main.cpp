@@ -22,29 +22,21 @@ int main(int argc, char** argv)
 			std::cout << std::string(40, '=') << std::endl;
 			std::cout << "Table #" << (++index) << std::endl;
 
-			std::cout << "N : " << cards(ts["North"]) << std::endl;
-			std::cout << "E : " << cards(ts["East"]) << std::endl;
-			std::cout << "S : " << cards(ts["South"]) << std::endl;
-			std::cout << "W : " << cards(ts["West"]) << std::endl;
+			std::cout << "  N:" << std::endl;
+			hand {ts["N"]}.dump();
 
-//			std::cout << "ts.IsScalar(): " << std::boolalpha << ts.IsScalar() << std::endl;
+			std::cout << "  E:" << std::endl;
+			hand {ts["E"]}.dump();
 
+			std::cout << "  S:" << std::endl;
+			hand {ts["S"]}.dump();
+
+			std::cout << "  W:" << std::endl;
+			hand {ts["W"]}.dump();
 
 			std::cout << std::string (40, '=') << std::endl;
 			std::cout << std::endl;
 		}
-//		auto yaml{YAML::LoadFile(argv[1])};
-//		if (!yaml.IsSequence()) {
-//			std::cout << "Not a sequense!: " << std::endl;
-//			return 1;
-//		}
-
-//		while (!df.eof())
-//		{
-//			cards c;
-//			df >> c;
-//			std::cout << c << std::endl;
-//		}
 	}
 	catch (const std::exception& e)
 	{
