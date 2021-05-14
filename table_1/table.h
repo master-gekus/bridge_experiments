@@ -31,13 +31,13 @@ enum card : uint16_t
 card next_card_from_string(const char* &str);
 const char* to_string(card c);
 
-enum suits : uint8_t
+enum suit : uint8_t
 {
 	Clubs = 0,
 	Diamonds = 1,
 	Hearts = 2,
 	Spades = 3,
-	NoTrump = std::numeric_limits<std::underlying_type_t<suits>>::max(),
+	NoTrump = std::numeric_limits<std::underlying_type_t<suit>>::max(),
 };
 
 class cards
@@ -99,18 +99,43 @@ public:
 	hand& operator=(hand&&) = default;
 
 	inline hand(const char* c, const char* d, const char* h, const char* s)
-		: suites_ {cards {c}, cards {d}, cards{h}, cards{s}}
-	{}
+		: suites_ {cards {c}, cards {d}, cards {h}, cards {s}}
+	{
+	}
 
 	inline explicit hand(const YAML::Node& n)
-		: suites_ {cards {n["C"]}, cards {n["D"]}, cards{n["H"]}, cards{n["S"]}}
-	{}
+		: suites_ {cards {n["C"]}, cards {n["D"]}, cards {n["H"]}, cards {n["S"]}}
+	{
+	}
 
 public:
 	void dump(std::ostream& os = std::cout);
 
 private:
 	std::array<cards, 4> suites_;
+};
+
+class table
+{
+public:
+	table() = default;
+	~table() = default;
+
+	table(const table&) = default;
+	table(table&&) = default;
+	table& operator=(const table&) = default;
+	table& operator=(table&&) = default;
+
+	inline explicit table(const YAML::Node& n)
+		: hands_ {hand {n["N"]}, hand {n["E"]}, hand {n["S"]}, hand {n["W"]}}
+	{
+	}
+
+public:
+	void dump(std::ostream& os = std::cout);
+
+private:
+	std::array<hand, 4> hands_;
 };
 
 inline std::istream& operator>>(std::istream& is, cards& c)

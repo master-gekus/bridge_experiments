@@ -22,17 +22,9 @@ int main(int argc, char** argv)
 			std::cout << std::string(40, '=') << std::endl;
 			std::cout << "Table #" << (++index) << std::endl;
 
-			std::cout << "  N:" << std::endl;
-			hand {ts["N"]}.dump();
+			table t {ts};
 
-			std::cout << "  E:" << std::endl;
-			hand {ts["E"]}.dump();
-
-			std::cout << "  S:" << std::endl;
-			hand {ts["S"]}.dump();
-
-			std::cout << "  W:" << std::endl;
-			hand {ts["W"]}.dump();
+			t.dump();
 
 			std::cout << std::string (40, '=') << std::endl;
 			std::cout << std::endl;

@@ -125,3 +125,18 @@ void hand::dump(std::ostream& os)
 	os << "    H: " << suites_[2] << std::endl;
 	os << "    S: " << suites_[3] << std::endl;
 }
+
+void table::dump(std::ostream& os)
+{
+	std::cout << "  N:" << std::endl;
+	hands_[0].dump(os);
+
+	std::cout << "  E:" << std::endl;
+	hands_[1].dump(os);
+
+	std::cout << "  S:" << std::endl;
+	hands_[2].dump(os);
+
+	std::cout << "  W:" << std::endl;
+	hands_[3].dump(os);
+}
