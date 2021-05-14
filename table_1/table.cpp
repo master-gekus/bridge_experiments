@@ -80,7 +80,8 @@ const char* to_string(card c)
 	}
 }
 
-cards cards::from_string(const char* str)
+cards::cards(const char* str)
+	: cards_ {0}
 {
 	if (nullptr == str)
 	{
@@ -89,16 +90,13 @@ cards cards::from_string(const char* str)
 
 	if ('-' == (*str))
 	{
-		return cards {};
+		return;
 	}
 
-	cards result;
 	while (*str)
 	{
-		result.cards_ |= static_cast<underlying_type>(next_card_from_string(str));
+		cards_ |= static_cast<underlying_type>(next_card_from_string(str));
 	}
-
-	return result;
 }
 
 std::string cards::to_string() const

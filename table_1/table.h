@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <string>
 
+#include <yaml-cpp/yaml.h>
+
 enum card : uint16_t
 {
 	C_2 = (1 << 0),
@@ -46,10 +48,21 @@ public:
 		: cards_ {0}
 	{
 	}
+
 	inline explicit cards(card c) noexcept
 		: cards_ {static_cast<underlying_type>(c)}
 	{
 	}
+
+	explicit cards(const char* str);
+
+	inline explicit cards(const std::string& str)
+		: cards {str.c_str()}
+	{}
+
+	inline explicit cards(const YAML::Node& n)
+		: cards {((!n.IsDefined()) || n.IsNull()) ? "" : n.as<std::string>().c_str()}
+	{}
 
 	~cards() = default;
 	cards(const cards&) = default;
@@ -58,12 +71,6 @@ public:
 	cards& operator=(cards&&) = default;
 
 public:
-	static cards from_string(const char* str);
-	static inline cards from_string(const std::string& str)
-	{
-		return from_string(str.c_str());
-	}
-
 	std::string to_string() const;
 
 private:
@@ -82,7 +89,7 @@ inline std::istream& operator>>(std::istream& is, cards& c)
 {
 	std::string s;
 	is >> s;
-	c = cards::from_string(s);
+	c = cards {s};
 	return is;
 }
 
