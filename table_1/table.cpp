@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <stdexcept>
 
-card next_card_from_string(const char*& str)
+card_t next_card_from_string(const char*& str)
 {
 	switch (std::toupper(*(str++)))
 	{
@@ -46,7 +46,7 @@ card next_card_from_string(const char*& str)
 	throw std::invalid_argument {"invalid character in string passed into next_card_from_string()"};
 }
 
-const char* to_string(card c) noexcept
+const char* to_string(card_t c) noexcept
 {
 	switch (c)
 	{
@@ -81,7 +81,7 @@ const char* to_string(card c) noexcept
 	}
 }
 
-cards::cards(const char* str)
+cards_t::cards_t(const char* str)
 	: cards_ {0}
 {
 	if (nullptr == str)
@@ -100,7 +100,7 @@ cards::cards(const char* str)
 	}
 }
 
-std::string cards::to_string() const
+std::string cards_t::to_string() const
 {
 	if (0 == cards_)
 	{
@@ -112,14 +112,28 @@ std::string cards::to_string() const
 	{
 		if (0 != (cards_ & c))
 		{
-			res += ::to_string(static_cast<card>(c));
+			res += ::to_string(static_cast<card_t>(c));
 		}
 	}
 
 	return res;
 };
 
-side::side(const char* str)
+bool cards_t::append(card_t c) noexcept
+{
+	auto cu {static_cast<underlying_type>(c)};
+
+	if (0 != (cards_ & cu))
+	{
+		return false;
+	}
+
+	cards_ |= cu;
+
+	return true;
+}
+
+side_t::side_t(const char* str)
 {
 	if (nullptr == str)
 	{
@@ -154,7 +168,7 @@ side::side(const char* str)
 	}
 }
 
-const char* side::to_string() const noexcept
+const char* side_t::to_string() const noexcept
 {
 	switch (static_cast<sides>(side_))
 	{
@@ -171,7 +185,7 @@ const char* side::to_string() const noexcept
 	}
 }
 
-suit::suit(const char* str, bool allow_nt)
+suit_t::suit_t(const char* str, bool allow_nt)
 {
 	if (nullptr == str)
 	{
@@ -218,7 +232,7 @@ suit::suit(const char* str, bool allow_nt)
 	}
 }
 
-const char* suit::to_string() const noexcept
+const char* suit_t::to_string() const noexcept
 {
 	switch (static_cast<suits>(suit_))
 	{
@@ -237,7 +251,7 @@ const char* suit::to_string() const noexcept
 	}
 }
 
-const char* suit::to_string_short() const noexcept
+const char* suit_t::to_string_short() const noexcept
 {
 	switch (static_cast<suits>(suit_))
 	{
@@ -256,25 +270,25 @@ const char* suit::to_string_short() const noexcept
 	}
 }
 
-void hand::dump(std::ostream& os)
+void hand_t::dump(std::ostream& os) const
 {
 	for (std::size_t i = 0; i < suites_.size(); ++i)
 	{
-		os << std::setw(12) << suit {i} << " : " << suites_[i] << std::endl;
+		os << std::setw(12) << suit_t {i} << " : " << suites_[i] << std::endl;
 	}
 }
 
-move::move(const char* str)
+move_t::move_t(const char* str)
 {
 	card_ = next_card_from_string(str);
-	suit_ = suit {str};
+	suit_ = suit_t {str};
 }
 
-void table::dump(std::ostream& os)
+void table_t::dump(std::ostream& os) const
 {
 	for (std::size_t i = 0; i < hands_.size(); ++i)
 	{
-		std::cout << "  " << side {i} << ":" << std::endl;
+		std::cout << "  " << side_t {i} << ":" << std::endl;
 		hands_[i].dump(os);
 	}
 
@@ -289,4 +303,31 @@ void table::dump(std::ostream& os)
 	std::cout << std::endl;
 
 	std::cout << "  Next move    : " << turn_starter_ + moves_.size() << std::endl;
+}
+
+bool table_t::is_valid() const noexcept
+{
+	std::array<hand_t, 4> hands {hands_};
+
+	if (!moves_.empty())
+	{
+		if (3 < moves_.size())
+		{
+			return false;
+		}
+
+		// "Вернём" сыгравшие карты и проверим, а можно ли было ими играть
+		side_t s {turn_starter_};
+		suit_t start_suit {moves_.front().suit()};
+		for (const auto& m : moves_)
+		{
+			if ((!hands[s].append(m)) || (!hands[s].is_move_valid(start_suit, m)))
+			{
+				return false;
+			}
+			++s;
+		}
+	}
+
+	return true;
 }

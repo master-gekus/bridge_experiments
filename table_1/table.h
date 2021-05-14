@@ -12,7 +12,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-enum card : uint16_t
+enum card_t : uint16_t
 {
 	C_2 = (1 << 0),
 	C_3 = (1 << 1),
@@ -29,10 +29,10 @@ enum card : uint16_t
 	Ace = (1 << 12),
 };
 
-card next_card_from_string(const char*& str);
-const char* to_string(card c) noexcept;
+card_t next_card_from_string(const char*& str);
+const char* to_string(card_t c) noexcept;
 
-class suit
+class suit_t
 {
 public:
 	enum suits : uint8_t
@@ -44,27 +44,32 @@ public:
 		NoTrump = std::numeric_limits<uint8_t>::max(),
 	};
 
-	inline constexpr suit() noexcept
+	inline constexpr suit_t() noexcept
 		: suit_ {0}
 	{
 	}
 
-	inline constexpr suit(suits s) noexcept
+	inline constexpr suit_t(suits s) noexcept
 		: suit_ {static_cast<uint8_t>(static_cast<uint8_t>(s) % 4)}
 	{
 	}
 
 	template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-	inline explicit constexpr suit(T s)
+	inline explicit constexpr suit_t(T s)
 		: suit_ {static_cast<uint8_t>(s % 4)}
 	{
 	}
 
-	explicit suit(const char* str, bool allow_nt = false);
+	explicit suit_t(const char* str, bool allow_nt = false);
 
-	inline explicit suit(const YAML::Node& n, bool allow_nt = false)
-		: suit {n.as<std::string>().c_str(), allow_nt}
+	inline explicit suit_t(const YAML::Node& n, bool allow_nt = false)
+		: suit_t {n.as<std::string>().c_str(), allow_nt}
 	{
+	}
+
+	inline operator std::size_t () const noexcept
+	{
+		return static_cast<std::size_t>(suit_);
 	}
 
 public:
@@ -75,48 +80,60 @@ private:
 	uint8_t suit_;
 };
 
-class cards
+class cards_t
 {
 private:
-	using underlying_type = std::underlying_type_t<card>;
+	using underlying_type = std::underlying_type_t<card_t>;
 
 public:
-	inline cards() noexcept
+	inline cards_t() noexcept
 		: cards_ {0}
 	{
 	}
 
-	inline explicit cards(card c) noexcept
+	inline explicit cards_t(card_t c) noexcept
 		: cards_ {static_cast<underlying_type>(c)}
 	{
 	}
 
-	explicit cards(const char* str);
+	explicit cards_t(const char* str);
 
-	inline explicit cards(const std::string& str)
-		: cards {str.c_str()}
+	inline explicit cards_t(const std::string& str)
+		: cards_t {str.c_str()}
 	{
 	}
 
-	inline explicit cards(const YAML::Node& n)
-		: cards {n.IsNull() ? "" : n.as<std::string>().c_str()}
+	inline explicit cards_t(const YAML::Node& n)
+		: cards_t {n.IsNull() ? "" : n.as<std::string>().c_str()}
 	{
 	}
 
-	~cards() = default;
-	cards(const cards&) = default;
-	cards(cards&&) = default;
-	cards& operator=(const cards&) = default;
-	cards& operator=(cards&&) = default;
+	~cards_t() = default;
+	cards_t(const cards_t&) = default;
+	cards_t(cards_t&&) = default;
+	cards_t& operator=(const cards_t&) = default;
+	cards_t& operator=(cards_t&&) = default;
 
 public:
+	inline bool empty() const noexcept
+	{
+		return (0 == cards_);
+	}
+
+	inline bool contains(card_t c) const noexcept
+	{
+		return (0 != (cards_ & static_cast<underlying_type>(c)));
+	}
+
 	std::string to_string() const;
+	bool append(card_t c) noexcept;
+	std::size_t size() const noexcept;
 
 private:
 	underlying_type cards_;
 };
 
-class side
+class side_t
 {
 public:
 	enum sides : uint8_t
@@ -127,40 +144,51 @@ public:
 		West = 3,
 	};
 
-	inline constexpr side() noexcept
+	inline constexpr side_t() noexcept
 		: side_ {0}
 	{
 	}
 
-	inline constexpr side(sides v)
+	inline constexpr side_t(sides v)
 		: side_ {static_cast<uint8_t>(static_cast<uint8_t>(v) % 4)}
 	{
 	}
 
 	template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-	inline constexpr side(T v)
+	inline constexpr side_t(T v)
 		: side_ {static_cast<uint8_t>(v % 4)}
 	{
 	}
 
 	template <typename T>
-	inline constexpr std::enable_if_t<std::is_integral_v<T>, side>
+	inline constexpr std::enable_if_t<std::is_integral_v<T>, side_t>
 	operator+(T term) const noexcept
 	{
-		return side {side_ + term};
+		return side_t {side_ + term};
 	}
 
-	explicit side(const char* str);
-	inline explicit side(const YAML::Node& n)
-		: side {n.as<std::string>().c_str()}
+	explicit side_t(const char* str);
+	inline explicit side_t(const YAML::Node& n)
+		: side_t {n.as<std::string>().c_str()}
 	{
 	}
 
-	~side() = default;
-	side(const side&) = default;
-	side(side&&) = default;
-	side& operator=(const side&) = default;
-	side& operator=(side&&) = default;
+	~side_t() = default;
+	side_t(const side_t&) = default;
+	side_t(side_t&&) = default;
+	side_t& operator=(const side_t&) = default;
+	side_t& operator=(side_t&&) = default;
+
+	inline operator std::size_t() const noexcept
+	{
+		return static_cast<std::size_t>(side_);
+	}
+
+	inline side_t& operator++()
+	{
+		side_ = static_cast<uint8_t>((side_ + 1) % 4);
+		return *this;
+	}
 
 public:
 	const char* to_string() const noexcept;
@@ -169,75 +197,112 @@ private:
 	uint8_t side_;
 };
 
-class hand
+class move_t
 {
 public:
-	hand() = default;
-	~hand() = default;
+	move_t() = default;
+	~move_t() = default;
 
-	hand(const hand&) = default;
-	hand(hand&&) = default;
-	hand& operator=(const hand&) = default;
-	hand& operator=(hand&&) = default;
+	move_t(const move_t&) = default;
+	move_t(move_t&&) = default;
+	move_t& operator=(const move_t&) = default;
+	move_t& operator=(move_t&&) = default;
 
-	inline hand(const char* c, const char* d, const char* h, const char* s)
-		: suites_ {cards {c}, cards {d}, cards {h}, cards {s}}
-	{
-	}
-
-	inline explicit hand(const YAML::Node& n)
-		: suites_ {cards {n["C"]}, cards {n["D"]}, cards {n["H"]}, cards {n["S"]}}
+	explicit move_t(const char* str);
+	inline explicit move_t(const YAML::Node& n)
+		: move_t {n.as<std::string>().c_str()}
 	{
 	}
 
 public:
-	void dump(std::ostream& os = std::cout);
-
-private:
-	std::array<cards, 4> suites_;
-};
-
-class move
-{
-public:
-	move() = default;
-	~move() = default;
-
-	move(const move&) = default;
-	move(move&&) = default;
-	move& operator=(const move&) = default;
-	move& operator=(move&&) = default;
-
-	explicit move(const char* str);
-	inline explicit move(const YAML::Node& n)
-		: move {n.as<std::string>().c_str()}
+	inline const card_t& card() const noexcept
 	{
+		return card_;
 	}
 
-public:
+	inline card_t& card() noexcept
+	{
+		return card_;
+	}
+
+	inline const suit_t& suit() const noexcept
+	{
+		return suit_;
+	}
+
+	inline suit_t& suit() noexcept
+	{
+		return suit_;
+	}
+
 	inline std::string to_string() const
 	{
 		return std::string {::to_string(card_)} + suit_.to_string_short();
 	}
 
 private:
-	card card_;
-	suit suit_;
+	card_t card_;
+	suit_t suit_;
 };
 
-class table
+class hand_t
 {
 public:
-	table() = default;
-	~table() = default;
+	hand_t() = default;
+	~hand_t() = default;
 
-	table(const table&) = default;
-	table(table&&) = default;
-	table& operator=(const table&) = default;
-	table& operator=(table&&) = default;
+	hand_t(const hand_t&) = default;
+	hand_t(hand_t&&) = default;
+	hand_t& operator=(const hand_t&) = default;
+	hand_t& operator=(hand_t&&) = default;
 
-	inline explicit table(const YAML::Node& n)
-		: hands_ {hand {n["N"]}, hand {n["E"]}, hand {n["S"]}, hand {n["W"]}}
+	inline hand_t(const char* c, const char* d, const char* h, const char* s)
+		: suites_ {cards_t {c}, cards_t {d}, cards_t {h}, cards_t {s}}
+	{
+	}
+
+	inline explicit hand_t(const YAML::Node& n)
+		: suites_ {cards_t {n["C"]}, cards_t {n["D"]}, cards_t {n["H"]}, cards_t {n["S"]}}
+	{
+	}
+
+public:
+	inline bool append(const move_t& m) noexcept
+	{
+		return suites_[m.suit()].append(m.card());
+	}
+
+	inline bool contains(const move_t& m) const noexcept
+	{
+		return suites_[m.suit()].contains(m.card());
+	}
+
+	inline bool is_move_valid(suit_t start_suit, const move_t& m) const noexcept
+	{
+		return (suites_[m.suit()].contains(m.card())
+				&& ((m.suit() == start_suit) || suites_[start_suit].empty()));
+	}
+
+	void dump(std::ostream& os = std::cout) const;
+	std::size_t size() const noexcept;
+
+private:
+	std::array<cards_t, 4> suites_;
+};
+
+class table_t
+{
+public:
+	table_t() = default;
+	~table_t() = default;
+
+	table_t(const table_t&) = default;
+	table_t(table_t&&) = default;
+	table_t& operator=(const table_t&) = default;
+	table_t& operator=(table_t&&) = default;
+
+	inline explicit table_t(const YAML::Node& n)
+		: hands_ {hand_t {n["N"]}, hand_t {n["E"]}, hand_t {n["S"]}, hand_t {n["W"]}}
 		, trump_ {n["T"], true}
 		, turn_starter_ {n["TS"]}
 	{
@@ -248,20 +313,21 @@ public:
 	}
 
 public:
-	void dump(std::ostream& os = std::cout);
+	void dump(std::ostream& os = std::cout) const;
+	bool is_valid() const noexcept;
 
 private:
-	std::array<hand, 4> hands_;
-	suit trump_;
-	side turn_starter_;
-	std::vector<move> moves_;
+	std::array<hand_t, 4> hands_;
+	suit_t trump_;
+	side_t turn_starter_;
+	std::vector<move_t> moves_;
 };
 
 template <typename T, typename... Types>
 using is_one_of = std::disjunction<std::is_same<T, Types>...>;
 
 template <typename T>
-inline std::enable_if_t<is_one_of<T, cards, suit, side, move>::value, std::ostream&>
+inline std::enable_if_t<is_one_of<T, cards_t, suit_t, side_t, move_t>::value, std::ostream&>
 operator<<(std::ostream& os, const T& c)
 {
 	os << c.to_string();

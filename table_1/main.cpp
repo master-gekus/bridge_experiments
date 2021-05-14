@@ -5,6 +5,17 @@
 
 #include <yaml-cpp/yaml.h>
 
+void process_table(table_t t)
+{
+	t.dump();
+
+	if (!t.is_valid()) {
+		std::cout << "Table IS NOT VALID: skipped." << std::endl;
+		return;
+	}
+	std::cout << "Table valid." << std::endl;
+}
+
 int main(int argc, char** argv)
 {
 	if (2 > argc)
@@ -21,9 +32,7 @@ int main(int argc, char** argv)
 			std::cout << std::string(40, '=') << std::endl;
 			std::cout << "Table #" << (++index) << std::endl;
 
-			table t {ts};
-
-			t.dump();
+			process_table(table_t {ts});
 
 			std::cout << std::string (40, '=') << std::endl;
 			std::cout << std::endl;
