@@ -20,13 +20,13 @@
     S: Q
 
   # Trump (козырь)
-  T: NT
+  T: S
 
   # Turn Starter (кто сделал первых ход)
   TS: E
 
   # Moves (уже сделанные ходы (массив строк))
-  M: []
+  M: [5D, 6S]
 
 #- North: 102
 #  East: AK

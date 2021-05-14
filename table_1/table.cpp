@@ -119,6 +119,41 @@ std::string cards::to_string() const
 	return res;
 };
 
+side::side(const char* str)
+{
+	if (nullptr == str)
+	{
+		throw std::invalid_argument {"nullptr passed into side::side()"};
+	}
+
+	const auto* s {str};
+	switch (std::toupper(*(s++)))
+	{
+	case '\0':
+		throw std::invalid_argument {"empty string into side::side()"};
+	case 'N':
+		side_ = static_cast<uint8_t>(North);
+		break;
+	case 'E':
+		side_ = static_cast<uint8_t>(East);
+		break;
+	case 'S':
+		side_ = static_cast<uint8_t>(South);
+		break;
+	case 'W':
+		side_ = static_cast<uint8_t>(West);
+		break;
+	default:
+		--s;
+		break;
+	}
+
+	if ('\0' != (*s))
+	{
+		throw std::invalid_argument {"string \"" + std::string {str} + "\" can not be parsed as valid side"};
+	}
+}
+
 const char* side::to_string() const noexcept
 {
 	switch (static_cast<sides>(side_))
@@ -202,10 +237,24 @@ const char* suit::to_string() const noexcept
 	}
 }
 
-//const char* suit::to_string_short() const noexcept
-//{
-
-//}
+const char* suit::to_string_short() const noexcept
+{
+	switch (static_cast<suits>(suit_))
+	{
+	case Clubs:
+		return "C";
+	case Diamonds:
+		return "D";
+	case Hearts:
+		return "H";
+	case Spades:
+		return "S";
+	case NoTrump:
+		return "NT";
+	default:
+		return "<invalid>";
+	}
+}
 
 void hand::dump(std::ostream& os)
 {
@@ -213,6 +262,12 @@ void hand::dump(std::ostream& os)
 	{
 		os << std::setw(12) << suit {i} << " : " << suites_[i] << std::endl;
 	}
+}
+
+move::move(const char* str)
+{
+	card_ = next_card_from_string(str);
+	suit_ = suit {str};
 }
 
 void table::dump(std::ostream& os)
@@ -225,5 +280,13 @@ void table::dump(std::ostream& os)
 
 	std::cout << "  Trump        : " << trump_ << std::endl;
 	std::cout << "  Turn starter : " << turn_starter_ << std::endl;
+
+	std::cout << "  Made moves   : ";
+	for (const auto& m : moves_)
+	{
+		std::cout << m << " ";
+	}
+	std::cout << std::endl;
+
 	std::cout << "  Next move    : " << turn_starter_ + moves_.size() << std::endl;
 }

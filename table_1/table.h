@@ -150,6 +150,12 @@ public:
 		return side {side_ + term};
 	}
 
+	explicit side(const char* str);
+	inline explicit side(const YAML::Node& n)
+		: side {n.as<std::string>().c_str()}
+	{
+	}
+
 	~side() = default;
 	side(const side&) = default;
 	side(side&&) = default;
@@ -191,6 +197,34 @@ private:
 	std::array<cards, 4> suites_;
 };
 
+class move
+{
+public:
+	move() = default;
+	~move() = default;
+
+	move(const move&) = default;
+	move(move&&) = default;
+	move& operator=(const move&) = default;
+	move& operator=(move&&) = default;
+
+	explicit move(const char* str);
+	inline explicit move(const YAML::Node& n)
+		: move {n.as<std::string>().c_str()}
+	{
+	}
+
+public:
+	inline std::string to_string() const
+	{
+		return std::string {::to_string(card_)} + suit_.to_string_short();
+	}
+
+private:
+	card card_;
+	suit suit_;
+};
+
 class table
 {
 public:
@@ -205,7 +239,12 @@ public:
 	inline explicit table(const YAML::Node& n)
 		: hands_ {hand {n["N"]}, hand {n["E"]}, hand {n["S"]}, hand {n["W"]}}
 		, trump_ {n["T"], true}
+		, turn_starter_ {n["TS"]}
 	{
+		for (const auto& m : n["M"])
+		{
+			moves_.emplace_back(m);
+		}
 	}
 
 public:
@@ -215,14 +254,14 @@ private:
 	std::array<hand, 4> hands_;
 	suit trump_;
 	side turn_starter_;
-	std::vector<uint8_t> moves_;
+	std::vector<move> moves_;
 };
 
 template <typename T, typename... Types>
 using is_one_of = std::disjunction<std::is_same<T, Types>...>;
 
 template <typename T>
-inline std::enable_if_t<is_one_of<T, cards, suit, side>::value, std::ostream&>
+inline std::enable_if_t<is_one_of<T, cards, suit, side, move>::value, std::ostream&>
 operator<<(std::ostream& os, const T& c)
 {
 	os << c.to_string();
