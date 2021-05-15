@@ -133,6 +133,19 @@ bool cards_t::append(card_t c) noexcept
 	return true;
 }
 
+std::size_t cards_t::size() const noexcept
+{
+	std::size_t res {0};
+	for (underlying_type c = cards_; 0 != c; c >>= 1)
+	{
+		if (0 != (c & 1))
+		{
+			++res;
+		}
+	}
+	return res;
+}
+
 side_t::side_t(const char* str)
 {
 	if (nullptr == str)
@@ -326,6 +339,23 @@ bool table_t::is_valid() const noexcept
 				return false;
 			}
 			++s;
+		}
+	}
+
+	const std::size_t sz {hands[0].size()};
+	if ((hands[1].size() != sz) || (hands[2].size() != sz) || (hands[3].size() != sz))
+	{
+		return false;
+	}
+
+	for (std::size_t i = 0; i < 3; ++i)
+	{
+		for (std::size_t j = i + 1; j < 4; ++j)
+		{
+			if (hands[i].is_intersect(hands[j]))
+			{
+				return false;
+			}
 		}
 	}
 

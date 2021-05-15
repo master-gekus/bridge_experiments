@@ -125,6 +125,11 @@ public:
 		return (0 != (cards_ & static_cast<underlying_type>(c)));
 	}
 
+	inline bool is_intersect(cards_t other) const noexcept
+	{
+		return (0 != (cards_ & other.cards_));
+	}
+
 	std::string to_string() const;
 	bool append(card_t c) noexcept;
 	std::size_t size() const noexcept;
@@ -277,14 +282,26 @@ public:
 		return suites_[m.suit()].contains(m.card());
 	}
 
+	inline bool is_intersect(const hand_t& other) const noexcept
+	{
+		return suites_[0].is_intersect(other.suites_[0])
+			|| suites_[1].is_intersect(other.suites_[1])
+			|| suites_[2].is_intersect(other.suites_[2])
+			|| suites_[3].is_intersect(other.suites_[3]);
+	}
+
 	inline bool is_move_valid(suit_t start_suit, const move_t& m) const noexcept
 	{
 		return (suites_[m.suit()].contains(m.card())
 				&& ((m.suit() == start_suit) || suites_[start_suit].empty()));
 	}
 
+	inline std::size_t size() const
+	{
+		return suites_[0].size() + suites_[1].size() + suites_[2].size() + suites_[3].size();
+	}
+
 	void dump(std::ostream& os = std::cout) const;
-	std::size_t size() const noexcept;
 
 private:
 	std::array<cards_t, 4> suites_;
