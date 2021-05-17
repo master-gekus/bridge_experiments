@@ -146,6 +146,17 @@ std::size_t cards_t::size() const noexcept
 	return res;
 }
 
+void cards_t::get_moves(std::vector<move_ex_t>& res, const suit_t& suit) const
+{
+	for (underlying_type i = C_2; i <= Ace; i <<= 1)
+	{
+		if (0 != (cards_ & i))
+		{
+			res.emplace_back(static_cast<card_t>(i), suit);
+		}
+	}
+}
+
 side_t::side_t(const char* str)
 {
 	if (nullptr == str)
@@ -283,6 +294,26 @@ const char* suit_t::to_string_short() const noexcept
 	}
 }
 
+std::vector<move_ex_t> hand_t::available_moves(const suit_t& suit) const
+{
+	std::vector<move_ex_t> res;
+	res.reserve(13);
+
+	if ((suit_t::NoTrump != suit) && (!suites_[suit].empty()))
+	{
+		suites_[suit].get_moves(res, suit);
+	}
+	else
+	{
+		for (std::size_t i = 0; i < suites_.size(); ++i)
+		{
+			suites_[i].get_moves(res, suit_t {i});
+		}
+	}
+
+	return res;
+}
+
 void hand_t::dump(std::ostream& os) const
 {
 	for (std::size_t i = 0; i < suites_.size(); ++i)
@@ -305,17 +336,31 @@ void table_t::dump(std::ostream& os) const
 		hands_[i].dump(os);
 	}
 
-	std::cout << "  Trump        : " << trump_ << std::endl;
-	std::cout << "  Turn starter : " << turn_starter_ << std::endl;
+	std::cout << "  Trump           : " << trump_ << std::endl;
+	std::cout << "  Turn starter    : " << turn_starter_ << std::endl;
 
-	std::cout << "  Made moves   : ";
+	std::cout << "  Made moves      : ";
 	for (const auto& m : moves_)
 	{
 		std::cout << m << " ";
 	}
 	std::cout << std::endl;
 
-	std::cout << "  Next move    : " << turn_starter_ + moves_.size() << std::endl;
+	if (!is_valid())
+	{
+		std::cout << "  TABLE IS INVALID!" << std::endl;
+	}
+	else
+	{
+		std::cout << "  Next player     : " << turn_starter_ + moves_.size() << std::endl;
+
+		std::cout << "  Available moves : ";
+		for (const auto& m : available_moves())
+		{
+			std::cout << m << " ";
+		}
+		std::cout << std::endl;
+	}
 }
 
 bool table_t::is_valid() const noexcept
@@ -343,7 +388,9 @@ bool table_t::is_valid() const noexcept
 	}
 
 	const std::size_t sz {hands[0].size()};
-	if ((hands[1].size() != sz) || (hands[2].size() != sz) || (hands[3].size() != sz))
+	// В принципе, проверка на "не более 13" особо не нужна - карт всего 52, и если будет
+	// больше 13, сработает проверка в следующем цикле на пересечения
+	if ((13 < sz) || (hands[1].size() != sz) || (hands[2].size() != sz) || (hands[3].size() != sz))
 	{
 		return false;
 	}

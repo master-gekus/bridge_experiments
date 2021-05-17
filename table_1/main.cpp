@@ -5,15 +5,13 @@
 
 #include <yaml-cpp/yaml.h>
 
-void process_table(table_t t)
+void process_table(const YAML::Node& n)
 {
+	table_t t {n};
 	t.dump();
-
 	if (!t.is_valid()) {
-		std::cout << "Table IS NOT VALID: skipped." << std::endl;
 		return;
 	}
-	std::cout << "Table valid." << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -32,7 +30,7 @@ int main(int argc, char** argv)
 			std::cout << std::string(40, '=') << std::endl;
 			std::cout << "Table #" << (++index) << std::endl;
 
-			process_table(table_t {ts});
+			process_table(ts);
 
 			std::cout << std::string (40, '=') << std::endl;
 			std::cout << std::endl;

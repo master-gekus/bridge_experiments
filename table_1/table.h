@@ -50,7 +50,7 @@ public:
 	}
 
 	inline constexpr suit_t(suits s) noexcept
-		: suit_ {static_cast<uint8_t>(static_cast<uint8_t>(s) % 4)}
+		: suit_ {(NoTrump == s) ? static_cast<uint8_t>(NoTrump) : static_cast<uint8_t>(static_cast<uint8_t>(s) % 4)}
 	{
 	}
 
@@ -67,7 +67,7 @@ public:
 	{
 	}
 
-	inline operator std::size_t () const noexcept
+	inline operator std::size_t() const noexcept
 	{
 		return static_cast<std::size_t>(suit_);
 	}
@@ -79,6 +79,8 @@ public:
 private:
 	uint8_t suit_;
 };
+
+class move_ex_t;
 
 class cards_t
 {
@@ -133,6 +135,7 @@ public:
 	std::string to_string() const;
 	bool append(card_t c) noexcept;
 	std::size_t size() const noexcept;
+	void get_moves(std::vector<move_ex_t>& res, const suit_t& suit) const;
 
 private:
 	underlying_type cards_;
@@ -213,6 +216,12 @@ public:
 	move_t& operator=(const move_t&) = default;
 	move_t& operator=(move_t&&) = default;
 
+	inline move_t(const card_t& c, const suit_t& s)
+		: card_ {c}
+		, suit_ {s}
+	{
+	}
+
 	explicit move_t(const char* str);
 	inline explicit move_t(const YAML::Node& n)
 		: move_t {n.as<std::string>().c_str()}
@@ -248,6 +257,41 @@ public:
 private:
 	card_t card_;
 	suit_t suit_;
+};
+
+class move_ex_t : public move_t
+{
+public:
+	move_ex_t()
+		: tricks_ {0}
+	{
+	}
+	move_ex_t(const card_t& c, const suit_t& s)
+		: move_t {c, s}
+		, tricks_ {0}
+	{
+	}
+
+	~move_ex_t() = default;
+
+	move_ex_t(const move_ex_t&) = default;
+	move_ex_t(move_ex_t&&) = default;
+	move_ex_t& operator=(const move_ex_t&) = default;
+	move_ex_t& operator=(move_ex_t&&) = default;
+
+public:
+	inline uint8_t tricks() const
+	{
+		return tricks_;
+	}
+
+	inline uint8_t& tricks()
+	{
+		return tricks_;
+	}
+
+public:
+	uint8_t tricks_;
 };
 
 class hand_t
@@ -301,6 +345,7 @@ public:
 		return suites_[0].size() + suites_[1].size() + suites_[2].size() + suites_[3].size();
 	}
 
+	std::vector<move_ex_t> available_moves(const suit_t& suit) const;
 	void dump(std::ostream& os = std::cout) const;
 
 private:
@@ -332,6 +377,12 @@ public:
 public:
 	void dump(std::ostream& os = std::cout) const;
 	bool is_valid() const noexcept;
+	inline std::vector<move_ex_t> available_moves() const
+	{
+		return hands_[turn_starter_ + moves_.size()].available_moves(moves_.empty()
+																		 ? suit_t::NoTrump
+																		 : moves_.front().suit());
+	}
 
 private:
 	std::array<hand_t, 4> hands_;
@@ -344,7 +395,7 @@ template <typename T, typename... Types>
 using is_one_of = std::disjunction<std::is_same<T, Types>...>;
 
 template <typename T>
-inline std::enable_if_t<is_one_of<T, cards_t, suit_t, side_t, move_t>::value, std::ostream&>
+inline std::enable_if_t<is_one_of<T, cards_t, suit_t, side_t, move_t, move_ex_t>::value, std::ostream&>
 operator<<(std::ostream& os, const T& c)
 {
 	os << c.to_string();
