@@ -8,6 +8,7 @@
 #include <limits>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <yaml-cpp/yaml.h>
@@ -132,6 +133,11 @@ public:
 		return (0 != (cards_ & other.cards_));
 	}
 
+	inline void remove(card_t c) noexcept
+	{
+		cards_ &= ~static_cast<underlying_type>(c);
+	}
+
 	std::string to_string() const;
 	bool append(card_t c) noexcept;
 	std::size_t size() const noexcept;
@@ -254,6 +260,11 @@ public:
 		return std::string {::to_string(card_)} + suit_.to_string_short();
 	}
 
+	inline bool is_beat(const move_t& m, const suit_t& trump) const noexcept
+	{
+		return (m.suit_ == suit_) ? (card_ > m.card_) : (trump == suit_);
+	}
+
 private:
 	card_t card_;
 	suit_t suit_;
@@ -321,6 +332,11 @@ public:
 		return suites_[m.suit()].append(m.card());
 	}
 
+	inline void remove(const move_t& m) noexcept
+	{
+		suites_[m.suit()].remove(m.card());
+	}
+
 	inline bool contains(const move_t& m) const noexcept
 	{
 		return suites_[m.suit()].contains(m.card());
@@ -383,6 +399,8 @@ public:
 																		 ? suit_t::NoTrump
 																		 : moves_.front().suit());
 	}
+
+	std::pair<bool, side_t> make_move(const move_t& m);
 
 private:
 	std::array<hand_t, 4> hands_;

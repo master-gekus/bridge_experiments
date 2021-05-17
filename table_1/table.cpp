@@ -408,3 +408,35 @@ bool table_t::is_valid() const noexcept
 
 	return true;
 }
+
+std::pair<bool, side_t> table_t::make_move(const move_t& m)
+{
+	suit_t suit {moves_.empty() ? m.suit() : moves_.front().suit()};
+	side_t side {turn_starter_ + moves_.size()};
+
+	if (!hands_[side].is_move_valid(suit, m))
+	{
+		throw std::logic_error {"Trying to make invalid move."};
+	}
+
+	hands_[side].remove(m);
+	moves_.push_back(m);
+
+	if (4 != moves_.size())
+	{
+		return std::make_pair(false, side_t {});
+	}
+
+	std::size_t winer {0};
+	for (std::size_t i = 1; i < moves_.size(); ++i)
+	{
+		if (moves_[i].is_beat(moves_[winer], trump_))
+		{
+			winer = i;
+		}
+	}
+	turn_starter_ = turn_starter_+ winer;
+	moves_.clear();
+
+	return std::make_pair(true, turn_starter_);
+}

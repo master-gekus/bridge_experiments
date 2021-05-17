@@ -1,7 +1,8 @@
+#include "table.h"
+
 #include <iostream>
 #include <stdexcept>
-
-#include "table.h"
+#include <tuple>
 
 #include <yaml-cpp/yaml.h>
 
@@ -9,8 +10,30 @@ void process_table(const YAML::Node& n)
 {
 	table_t t {n};
 	t.dump();
-	if (!t.is_valid()) {
+	if (!t.is_valid())
+	{
 		return;
+	}
+
+	for (const auto& m : t.available_moves())
+	{
+		std::cout << std::endl
+				  << "Making move \"" << m << "\" : ";
+		table_t nt {t};
+
+		bool last {false};
+		side_t winer;
+		std::tie(last, winer) = nt.make_move(m);
+
+		if (last)
+		{
+			std::cout << "Last move, winner is " << winer << std::endl;
+		}
+		else
+		{
+			std::cout << "Continue turn." << std::endl;
+		}
+		nt.dump();
 	}
 }
 
@@ -32,7 +55,7 @@ int main(int argc, char** argv)
 
 			process_table(ts);
 
-			std::cout << std::string (40, '=') << std::endl;
+			std::cout << std::string(40, '=') << std::endl;
 			std::cout << std::endl;
 		}
 	}
