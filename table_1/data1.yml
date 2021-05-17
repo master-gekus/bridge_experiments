@@ -1,32 +1,32 @@
 - N:
-    C: 
-    D: 
-    H: 
+    C: 9
+    D: K84
+    H: 54
     S: 
   E:
-    C: 
-    D: 
+    C: 5
+    D: AQ2
     H: 
-    S: 8
+    S: 82
   S:
-    C: 
+    C: J82
     D: 
-    H: 
-    S: 
+    H: 96
+    S: 5
   W:
-    C: 
-    D: 
-    H: 
-    S: 
+    C: 106
+    D: 7
+    H: 83
+    S: 9
 
   # Trump (козырь)
-  T: S
+  T: NT
 
   # Turn Starter (кто сделал первых ход)
-  TS: S
+  TS: E
 
   # Moves (уже сделанные ходы (массив строк))
-  M: [3D, JH, 10D]
+  M: []
 
 #- North: 102
 #  East: AK

@@ -1,24 +1,24 @@
-#include "table.h"
+﻿#include "table.h"
 
+#include <algorithm>
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
-#include <tuple>
 
 #include <yaml-cpp/yaml.h>
 
-void process_table(const YAML::Node& n)
+std::optional<move_ex_t> process_table(std::size_t indent, const table_t& t, uint64_t& iterations)
 {
-	table_t t {n};
-	t.dump();
-	if (!t.is_valid())
+	if (0 == ((++iterations) % 1000000))
 	{
-		return;
+		std::cout << std::setw(16) << iterations << std::string(16, '\b') << std::flush;
 	}
 
-	for (const auto& m : t.available_moves())
+	auto moves {t.available_moves()};
+	for (auto& m : moves)
 	{
-		std::cout << std::endl
-				  << "Making move \"" << m << "\" : ";
+		//		std::cout << std::string(indent, ' ') << t.current_player() << " makes move \"" << m << "\" :" << std::endl;
 		table_t nt {t};
 
 		bool last {false};
@@ -27,13 +27,67 @@ void process_table(const YAML::Node& n)
 
 		if (last)
 		{
-			std::cout << "Last move, winner is " << winer << std::endl;
+			//			std::cout << std::string(indent, ' ') << (winer.is_ns() ? "NS" : "EW") << "wins a trick." << std::endl;
+			if (winer.is_ns())
+			{
+				m.add_tricks(1);
+			}
 		}
-		else
+
+		auto res {process_table(indent + 2, nt, iterations)};
+		if (res)
 		{
-			std::cout << "Continue turn." << std::endl;
+			m.add_tricks(res->tricks());
 		}
-		nt.dump();
+	}
+
+	if (moves.empty())
+	{
+		return std::nullopt;
+	}
+
+	std::sort(moves.begin(), moves.end());
+	if (t.current_player().is_ns())
+	{
+		//		std::cout << std::string(indent, ' ') << "Best move for NS: " << moves.back()
+		//				  << " (gives " << moves.back().tricks() << " trick(s))" << std::endl;
+		return moves.back();
+	}
+	else
+	{
+		//		std::cout << std::string(indent, ' ') << "Best move for EW: " << moves.front()
+		//				  << " (gives only " << moves.front().tricks() << " trick(s) for NS)" << std::endl;
+		return moves.front();
+	}
+}
+
+void process_table(const YAML::Node& n)
+{
+	table_t t {n};
+	if (!t.is_valid())
+	{
+		t.dump();
+		return;
+	}
+
+	while (true)
+	{
+		t.dump();
+		uint64_t iterations {0};
+		std::cout << "Calculating: " << std::flush;
+		auto start {std::chrono::steady_clock::now()};
+		auto res {process_table(0, t, iterations)};
+		auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
+		std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s))" << std::endl;
+		if (!res)
+		{
+			break;
+		}
+		std::cout << "Move for " << t.current_player() << " [" << t.available_moves() << "; recomended " << (*res)
+				  << ", gives " << res->tricks() << " for NS] : ";
+		std::string m;
+		std::cin >> m;
+		t.make_move(move_t {m.c_str()});
 	}
 }
 

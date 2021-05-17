@@ -6,6 +6,7 @@
 #include <array>
 #include <iostream>
 #include <limits>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -205,6 +206,11 @@ public:
 	}
 
 public:
+	inline bool is_ns() const noexcept
+	{
+		return (North == static_cast<sides>(side_)) || (South == static_cast<sides>(side_));
+	}
+
 	const char* to_string() const noexcept;
 
 private:
@@ -240,17 +246,7 @@ public:
 		return card_;
 	}
 
-	inline card_t& card() noexcept
-	{
-		return card_;
-	}
-
 	inline const suit_t& suit() const noexcept
-	{
-		return suit_;
-	}
-
-	inline suit_t& suit() noexcept
 	{
 		return suit_;
 	}
@@ -290,15 +286,20 @@ public:
 	move_ex_t& operator=(const move_ex_t&) = default;
 	move_ex_t& operator=(move_ex_t&&) = default;
 
-public:
-	inline uint8_t tricks() const
+	inline bool operator<(const move_ex_t& other) const noexcept
 	{
-		return tricks_;
+		return tricks_ < other.tricks_;
 	}
 
-	inline uint8_t& tricks()
+public:
+	inline int tricks() const
 	{
-		return tricks_;
+		return static_cast<int>(tricks_);
+	}
+
+	inline void add_tricks(uint8_t new_tricks)
+	{
+		tricks_ += new_tricks;
 	}
 
 public:
@@ -402,6 +403,11 @@ public:
 
 	std::pair<bool, side_t> make_move(const move_t& m);
 
+	inline side_t current_player() const noexcept
+	{
+		return turn_starter_ + moves_.size();
+	}
+
 private:
 	std::array<hand_t, 4> hands_;
 	suit_t trump_;
@@ -417,6 +423,22 @@ inline std::enable_if_t<is_one_of<T, cards_t, suit_t, side_t, move_t, move_ex_t>
 operator<<(std::ostream& os, const T& c)
 {
 	os << c.to_string();
+	return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const std::vector<move_ex_t>& moves)
+{
+	bool first {true};
+	for (const auto& m : moves)
+	{
+		if (!first)
+		{
+			std::cout << ", ";
+		}
+		first = false;
+		std::cout << m;
+	}
 	return os;
 }
 
