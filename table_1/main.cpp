@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <stdexcept>
 
 #include <yaml-cpp/yaml.h>
@@ -61,34 +62,81 @@ std::optional<move_ex_t> process_table(std::size_t indent, const table_t& t, uin
 	}
 }
 
+std::pair<uint8_t, uint64_t> process_table(table_t& table)
+{
+	std::cout << "Calculating for " << std::setw(18) << std::setiosflags(std::ios::left)
+			  << (std::string {"["} + (table.current_player() - 1).to_string() + ", "
+				  + table.trump().to_string() + "]")
+			  << ": " << std::resetiosflags(std::ios::left) << std::flush;
+
+	uint64_t iterations {0};
+	auto start {std::chrono::steady_clock::now()};
+	auto res {process_table(0, table, iterations)};
+	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
+	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s))" << std::endl;
+
+	return std::make_pair(res->tricks(), dur);
+}
+
 void process_table(const YAML::Node& n)
 {
-	table_t t {n};
-	if (!t.is_valid())
+	table_t table {n};
+	if (!table.is_valid())
 	{
-		t.dump();
+		table.dump();
 		return;
 	}
 
-	while (true)
+	std::map<side_t, std::map<suit_t, std::pair<uint8_t, uint64_t>>> results;
+
+	for (std::size_t side = side_t::North; side <= side_t::West; ++side)
 	{
-		t.dump();
-		uint64_t iterations {0};
-		std::cout << "Calculating: " << std::flush;
-		auto start {std::chrono::steady_clock::now()};
-		auto res {process_table(0, t, iterations)};
-		auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
-		std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s))" << std::endl;
-		if (!res)
+		table.set_starter(side + 1);
+		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
 		{
-			break;
+			table.set_trump(trump);
+			results[side][trump] = process_table(table);
 		}
-		std::cout << "Move for " << t.current_player() << " [" << t.available_moves() << "; recomended " << (*res)
-				  << ", gives " << res->tricks() << " for NS] : ";
-		std::string m;
-		std::cin >> m;
-		t.make_move(move_t {m.c_str()});
+		table.set_trump(suit_t::NoTrump);
+		results[side][suit_t::NoTrump] = process_table(table);
 	}
+
+	std::cout << std::string(12, ' ');
+	for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
+	{
+		std::cout << std::setw(10) << suit_t {trump};
+	}
+	std::cout << std::setw(10) << suit_t {suit_t::NoTrump} << std::endl;
+
+	for (std::size_t side = side_t::North; side <= side_t::West; ++side)
+	{
+		std::cout << std::setw(10) << side_t {side} << " :";
+		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
+		{
+			std::cout << std::setw(10) << static_cast<int>(results[side][trump].first);
+		}
+		std::cout << std::setw(10) << static_cast<int>(results[side][suit_t::NoTrump].first) << std::endl;
+	}
+
+	//	while (true)
+	//	{
+	//		table.dump();
+	//		uint64_t iterations {0};
+	//		std::cout << "Calculating: " << std::flush;
+	//		auto start {std::chrono::steady_clock::now()};
+	//		auto res {process_table(0, table, iterations)};
+	//		auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
+	//		std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s))" << std::endl;
+	//		if (!res)
+	//		{
+	//			break;
+	//		}
+	//		std::cout << "Move for " << table.current_player() << " [" << table.available_moves() << "; recomended " << (*res)
+	//				  << ", gives " << res->tricks() << " for NS] : ";
+	//		std::string m;
+	//		std::cin >> m;
+	//		table.make_move(move_t {m.c_str()});
+	//	}
 }
 
 int main(int argc, char** argv)

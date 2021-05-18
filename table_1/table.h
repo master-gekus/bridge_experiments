@@ -57,7 +57,7 @@ public:
 	}
 
 	template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-	inline explicit constexpr suit_t(T s)
+	inline constexpr suit_t(T s)
 		: suit_ {static_cast<uint8_t>(s % 4)}
 	{
 	}
@@ -72,6 +72,12 @@ public:
 	inline operator std::size_t() const noexcept
 	{
 		return static_cast<std::size_t>(suit_);
+	}
+
+	inline suit_t& operator++()
+	{
+		suit_ = static_cast<uint8_t>((suit_ + 1) % 4);
+		return *this;
 	}
 
 public:
@@ -179,7 +185,14 @@ public:
 	inline constexpr std::enable_if_t<std::is_integral_v<T>, side_t>
 	operator+(T term) const noexcept
 	{
-		return side_t {side_ + term};
+		return side_t {side_ + 4 + (term % 4)};
+	}
+
+	template <typename T>
+	inline constexpr std::enable_if_t<std::is_integral_v<T>, side_t>
+	operator-(T term) const noexcept
+	{
+		return side_t {side_ + 4 - (term % 4)};
 	}
 
 	explicit side_t(const char* str);
@@ -406,6 +419,21 @@ public:
 	inline side_t current_player() const noexcept
 	{
 		return turn_starter_ + moves_.size();
+	}
+
+	inline const suit_t& trump() const noexcept
+	{
+		return trump_;
+	}
+
+	inline void set_starter(const side_t& s) noexcept
+	{
+		turn_starter_ = s;
+	}
+
+	inline void set_trump(const suit_t& t) noexcept
+	{
+		trump_ = t;
 	}
 
 private:
