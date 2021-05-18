@@ -17,8 +17,15 @@ std::optional<move_ex_t> process_table(std::size_t indent, const table_t& t, uin
 	}
 
 	auto moves {t.available_moves()};
-	for (auto& m : moves)
+	for (std::size_t i = 0; i < moves.size(); ++i)
 	{
+		auto& m {moves[i]};
+		if ((0 < i) && m.is_neighbor(moves[i - 1]))
+		{
+			m.add_tricks(moves[i - 1].tricks());
+			continue;
+		}
+
 		//		std::cout << std::string(indent, ' ') << t.current_player() << " makes move \"" << m << "\" :" << std::endl;
 		table_t nt {t};
 

@@ -33,6 +33,10 @@ enum card_t : uint16_t
 
 card_t next_card_from_string(const char*& str);
 const char* to_string(card_t c) noexcept;
+inline constexpr bool is_neighbors(card_t a, card_t b)
+{
+	return ((a << 1) == b) || ((b << 1) == a);
+}
 
 class suit_t
 {
@@ -272,6 +276,11 @@ public:
 	inline bool is_beat(const move_t& m, const suit_t& trump) const noexcept
 	{
 		return (m.suit_ == suit_) ? (card_ > m.card_) : (trump == suit_);
+	}
+
+	inline bool is_neighbor(const move_t& other) const noexcept
+	{
+		return (suit_ == other.suit_) && is_neighbors(card_, other.card_);
 	}
 
 private:

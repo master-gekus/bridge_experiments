@@ -1,0 +1,58 @@
+- Name: "Table #1"
+  N:
+    C: 9
+    D: K8
+    H: 54
+    S: 
+  E:
+    C: 5
+    D: AQ2
+    H: 
+    S: 8
+  S:
+    C: J82
+    D: 
+    H: 9
+    S: 5
+  W:
+    C: 106
+    D: 7
+    H: 8
+    S: 9
+
+  # Trump (козырь)
+  T: NT
+
+  # Turn Starter (кто сделал первых ход)
+  TS: E
+
+  # Moves (уже сделанные ходы (массив строк))
+  M: []
+
+# Result of calculating this table
+#Table #1
+#Calculating for [North, Clubs]    : took 310 milliseconds (683566 iteration(s))
+#Calculating for [North, Diamonds] : took 539 milliseconds (1236209 iteration(s))
+#Calculating for [North, Hearts]   : took 319 milliseconds (733867 iteration(s))
+#Calculating for [North, Spades]   : took 377 milliseconds (864954 iteration(s))
+#Calculating for [North, No Trump] : took 546 milliseconds (1261452 iteration(s))
+#Calculating for [East, Clubs]     : took 168 milliseconds (388256 iteration(s))
+#Calculating for [East, Diamonds]  : took 224 milliseconds (513953 iteration(s))
+#Calculating for [East, Hearts]    : took 186 milliseconds (424591 iteration(s))
+#Calculating for [East, Spades]    : took 206 milliseconds (472804 iteration(s))
+#Calculating for [East, No Trump]  : took 221 milliseconds (510512 iteration(s))
+#Calculating for [South, Clubs]    : took 352 milliseconds (799999 iteration(s))
+#Calculating for [South, Diamonds] : took 656 milliseconds (1447062 iteration(s))
+#Calculating for [South, Hearts]   : took 381 milliseconds (874238 iteration(s))
+#Calculating for [South, Spades]   : took 437 milliseconds (1003511 iteration(s))
+#Calculating for [South, No Trump] : took 610 milliseconds (1408803 iteration(s))
+#Calculating for [West, Clubs]     : took 319 milliseconds (733815 iteration(s))
+#Calculating for [West, Diamonds]  : took 568 milliseconds (1312557 iteration(s))
+#Calculating for [West, Hearts]    : took 340 milliseconds (780477 iteration(s))
+#Calculating for [West, Spades]    : took 377 milliseconds (867289 iteration(s))
+#Calculating for [West, No Trump]  : took 554 milliseconds (1272581 iteration(s))
+#                 Clubs  Diamonds    Hearts    Spades  No Trump
+#     North :         3         2         4         1         1
+#      East :         4         2         4         2         2
+#     South :         3         1         3         1         1
+#      West :         3         2         4         2         2
