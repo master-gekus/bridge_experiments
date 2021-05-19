@@ -6,7 +6,6 @@
 #include <array>
 #include <iostream>
 #include <limits>
-#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -351,6 +350,14 @@ public:
 	}
 
 public:
+	inline bool empty() const noexcept
+	{
+		return suites_[0].empty()
+			&& suites_[1].empty()
+			&& suites_[2].empty()
+			&& suites_[3].empty();
+	}
+
 	inline bool append(const move_t& m) noexcept
 	{
 		return suites_[m.suit()].append(m.card());
@@ -444,6 +451,14 @@ public:
 	inline void set_trump(const suit_t& t) noexcept
 	{
 		trump_ = t;
+	}
+
+	inline bool empty() const noexcept
+	{
+		return hands_[0].empty()
+			&& hands_[1].empty()
+			&& hands_[2].empty()
+			&& hands_[3].empty();
 	}
 
 private:

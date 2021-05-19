@@ -9,7 +9,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-std::optional<move_ex_t> process_table(std::size_t indent, const table_t& t, uint64_t& iterations)
+move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations)
 {
 	if (0 == ((++iterations) % 1000000))
 	{
@@ -17,6 +17,11 @@ std::optional<move_ex_t> process_table(std::size_t indent, const table_t& t, uin
 	}
 
 	auto moves {t.available_moves()};
+	if (moves.empty())
+	{
+		return move_ex_t {};
+	}
+
 	for (std::size_t i = 0; i < moves.size(); ++i)
 	{
 		auto& m {moves[i]};
@@ -42,16 +47,10 @@ std::optional<move_ex_t> process_table(std::size_t indent, const table_t& t, uin
 			}
 		}
 
-		auto res {process_table(indent + 2, nt, iterations)};
-		if (res)
+		if (!nt.empty())
 		{
-			m.add_tricks(res->tricks());
+			m.add_tricks(process_table(indent + 2, nt, iterations).tricks());
 		}
-	}
-
-	if (moves.empty())
-	{
-		return std::nullopt;
 	}
 
 	std::sort(moves.begin(), moves.end());
@@ -80,9 +79,10 @@ std::pair<uint8_t, uint64_t> process_table(table_t& table)
 	auto start {std::chrono::steady_clock::now()};
 	auto res {process_table(0, table, iterations)};
 	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
-	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s))" << std::endl;
+	double ips {(static_cast<double>(iterations) / static_cast<double>(dur)) / 1000.0};
+	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s); " << ips << " Mips)" << std::endl;
 
-	return std::make_pair(res->tricks(), dur);
+	return std::make_pair(res.tricks(), dur);
 }
 
 void process_table(const YAML::Node& n)
@@ -162,7 +162,8 @@ void process_table(const YAML::Node& n)
 		{
 			std::cout << "Results match stored results." << std::endl;
 		}
-		else {
+		else
+		{
 			std::cout << "Results DOES NOT match stored results at ["
 					  << side_mismatch << ", " << suit_mismatch << "]" << std::endl;
 		}
