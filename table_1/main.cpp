@@ -108,6 +108,7 @@ void process_table(const YAML::Node& n)
 		results[side][suit_t::NoTrump] = process_table(table);
 	}
 
+	// Output result table
 	std::cout << std::string(12, ' ');
 	for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
 	{
@@ -123,6 +124,52 @@ void process_table(const YAML::Node& n)
 			std::cout << std::setw(10) << static_cast<int>(results[side][trump].first);
 		}
 		std::cout << std::setw(10) << static_cast<int>(results[side][suit_t::NoTrump].first) << std::endl;
+	}
+
+	// Compare with stored results
+	try
+	{
+		const auto rc {n["Result"]};
+		bool is_match {true};
+		side_t side_mismatch;
+		suit_t suit_mismatch;
+		for (std::size_t side = side_t::North; side <= side_t::West; ++side)
+		{
+			const auto src {rc[side_t {side}.to_string_short()]};
+			for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
+			{
+				if (src[trump].as<int>() != static_cast<int>(results[side][trump].first))
+				{
+					is_match = false;
+					side_mismatch = side;
+					suit_mismatch = trump;
+					break;
+				}
+			}
+			if (!is_match)
+			{
+				break;
+			}
+			if (src[4].as<int>() != static_cast<int>(results[side][suit_t::NoTrump].first))
+			{
+				is_match = false;
+				side_mismatch = side;
+				suit_mismatch = suit_t::NoTrump;
+				break;
+			}
+		}
+		if (is_match)
+		{
+			std::cout << "Results match stored results." << std::endl;
+		}
+		else {
+			std::cout << "Results DOES NOT match stored results at ["
+					  << side_mismatch << ", " << suit_mismatch << "]" << std::endl;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << "Results to compare not found or invalid: " << e.what() << std::endl;
 	}
 
 	//	while (true)

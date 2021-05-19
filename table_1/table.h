@@ -229,6 +229,7 @@ public:
 	}
 
 	const char* to_string() const noexcept;
+	const char* to_string_short() const noexcept;
 
 private:
 	uint8_t side_;

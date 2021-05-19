@@ -209,6 +209,23 @@ const char* side_t::to_string() const noexcept
 	}
 }
 
+const char* side_t::to_string_short() const noexcept
+{
+	switch (static_cast<sides>(side_))
+	{
+	case North:
+		return "N";
+	case East:
+		return "E";
+	case South:
+		return "S";
+	case West:
+		return "W";
+	default:
+		return "<invalid>";
+	}
+}
+
 suit_t::suit_t(const char* str, bool allow_nt)
 {
 	if (nullptr == str)
