@@ -11,7 +11,8 @@
 
 #include <yaml-cpp/yaml.h>
 
-move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations)
+move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations,
+						std::size_t max_ns_found, std::size_t max_ew_found)
 {
 	assert(!t.empty());
 
@@ -24,10 +25,15 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 	assert(!moves.empty());
 
 	bool is_last_move {t.is_last_move()};
-	bool is_ns {t.current_player().is_ns()};
+	side_t current_player {t.current_player()};
+	bool is_ns {current_player.is_ns()};
+	std::size_t max_tricks {t.hand(current_player).size()};
 
 	for (std::size_t i = 0; i < moves.size(); ++i)
 	{
+		assert(max_ns_found <= max_tricks);
+		assert(max_ew_found <= max_tricks);
+
 		auto& m {moves[i]};
 		if ((0 < i) && m.is_neighbor(moves[i - 1]))
 		{
@@ -46,12 +52,27 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 			if (winer.is_ns())
 			{
 				m.add_tricks(1);
+				max_ns_found = (0 < max_ns_found) ? (max_ns_found - 1) : 0;
+			}
+			else {
+				if (max_ns_found >= max_tricks) {
+					continue;
+				}
 			}
 		}
 
 		if (!nt.empty())
 		{
-			m.add_tricks(process_table(indent + 2, nt, iterations).tricks());
+			m.add_tricks(process_table(indent + 2, nt, iterations, max_ns_found, max_ew_found).tricks());
+			if (is_last_move)
+			{
+				if (is_ns)
+				{
+					max_ns_found = std::max<std::size_t>(max_ns_found, m.tricks());
+				} else {
+
+				}
+			}
 		}
 	}
 
@@ -79,7 +100,7 @@ std::pair<uint8_t, uint64_t> process_table(table_t& table)
 
 	uint64_t iterations {0};
 	auto start {std::chrono::steady_clock::now()};
-	auto res {process_table(0, table, iterations)};
+	auto res {process_table(0, table, iterations, 0, 0)};
 	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
 	double ips {(static_cast<double>(iterations) / static_cast<double>(dur)) / 1000.0};
 	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s); " << ips << " Mips)" << std::endl;

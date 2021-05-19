@@ -467,6 +467,11 @@ public:
 		return (3 == moves_.size());
 	}
 
+	inline const hand_t& hand(const side_t& s) const noexcept
+	{
+		return hands_[s];
+	}
+
 private:
 	std::array<hand_t, 4> hands_;
 	suit_t trump_;
