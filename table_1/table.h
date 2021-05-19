@@ -431,7 +431,8 @@ public:
 																		 : moves_.front().suit());
 	}
 
-	std::pair<bool, side_t> make_move(const move_t& m);
+	// Returns winner side, if turn is finished,.and turn starter otherwise.
+	side_t make_move(const move_t& m);
 
 	inline side_t current_player() const noexcept
 	{
@@ -459,6 +460,11 @@ public:
 			&& hands_[1].empty()
 			&& hands_[2].empty()
 			&& hands_[3].empty();
+	}
+
+	inline bool is_last_move() const noexcept
+	{
+		return (3 == moves_.size());
 	}
 
 private:

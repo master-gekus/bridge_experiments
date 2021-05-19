@@ -1,5 +1,7 @@
 ﻿#include "table.h"
 
+#include <cassert>
+
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
@@ -11,16 +13,18 @@
 
 move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations)
 {
+	assert(!t.empty());
+
 	if (0 == ((++iterations) % 1000000))
 	{
 		std::cout << std::setw(16) << iterations << std::string(16, '\b') << std::flush;
 	}
 
 	auto moves {t.available_moves()};
-	if (moves.empty())
-	{
-		return move_ex_t {};
-	}
+	assert(!moves.empty());
+
+	bool is_last_move {t.is_last_move()};
+	bool is_ns {t.current_player().is_ns()};
 
 	for (std::size_t i = 0; i < moves.size(); ++i)
 	{
@@ -34,11 +38,9 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 		//		std::cout << std::string(indent, ' ') << t.current_player() << " makes move \"" << m << "\" :" << std::endl;
 		table_t nt {t};
 
-		bool last {false};
-		side_t winer;
-		std::tie(last, winer) = nt.make_move(m);
+		side_t winer {nt.make_move(m)};
 
-		if (last)
+		if (is_last_move)
 		{
 			//			std::cout << std::string(indent, ' ') << (winer.is_ns() ? "NS" : "EW") << "wins a trick." << std::endl;
 			if (winer.is_ns())
@@ -54,7 +56,7 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 	}
 
 	std::sort(moves.begin(), moves.end());
-	if (t.current_player().is_ns())
+	if (is_ns)
 	{
 		//		std::cout << std::string(indent, ' ') << "Best move for NS: " << moves.back()
 		//				  << " (gives " << moves.back().tricks() << " trick(s))" << std::endl;

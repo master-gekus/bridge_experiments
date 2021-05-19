@@ -426,7 +426,7 @@ bool table_t::is_valid() const noexcept
 	return true;
 }
 
-std::pair<bool, side_t> table_t::make_move(const move_t& m)
+side_t table_t::make_move(const move_t& m)
 {
 	suit_t suit {moves_.empty() ? m.suit() : moves_.front().suit()};
 	side_t side {turn_starter_ + moves_.size()};
@@ -439,21 +439,19 @@ std::pair<bool, side_t> table_t::make_move(const move_t& m)
 	hands_[side].remove(m);
 	moves_.push_back(m);
 
-	if (4 != moves_.size())
+	if (4== moves_.size())
 	{
-		return std::make_pair(false, side_t {});
-	}
-
-	std::size_t winer {0};
-	for (std::size_t i = 1; i < moves_.size(); ++i)
-	{
-		if (moves_[i].is_beat(moves_[winer], trump_))
+		std::size_t winer {0};
+		for (std::size_t i = 1; i < moves_.size(); ++i)
 		{
-			winer = i;
+			if (moves_[i].is_beat(moves_[winer], trump_))
+			{
+				winer = i;
+			}
 		}
+		turn_starter_ = turn_starter_+ winer;
+		moves_.clear();
 	}
-	turn_starter_ = turn_starter_+ winer;
-	moves_.clear();
 
-	return std::make_pair(true, turn_starter_);
+	return turn_starter_;
 }
