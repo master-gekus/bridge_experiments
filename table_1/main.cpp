@@ -11,6 +11,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <leveldb/db.h>
+
 move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations,
 						std::size_t max_ns_found, std::size_t max_ew_found)
 {
@@ -234,6 +236,13 @@ void process_table(const YAML::Node& n)
 
 int main(int argc, char** argv)
 {
+	std::unique_ptr<leveldb::DB> db;
+	{
+		leveldb::DB* database {nullptr};
+		leveldb::DB::Open(leveldb::Options {}, "data/test_database", &database);
+		db.reset(database);
+	}
+
 	if (2 > argc)
 	{
 		std::cout << "Argument needed." << std::endl;
