@@ -51,13 +51,23 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 			//			std::cout << std::string(indent, ' ') << (winer.is_ns() ? "NS" : "EW") << "wins a trick." << std::endl;
 			if (winer.is_ns())
 			{
+				if (max_ew_found >= max_tricks)
+				{
+					m.set_tricks(max_tricks);
+					continue;
+				}
+
 				m.add_tricks(1);
 				max_ns_found = (0 < max_ns_found) ? (max_ns_found - 1) : 0;
 			}
-			else {
-				if (max_ns_found >= max_tricks) {
+			else
+			{
+				if (max_ns_found >= max_tricks)
+				{
 					continue;
 				}
+
+				max_ew_found = (0 < max_ew_found) ? (max_ew_found - 1) : 0;
 			}
 		}
 
@@ -69,8 +79,11 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 				if (is_ns)
 				{
 					max_ns_found = std::max<std::size_t>(max_ns_found, m.tricks());
-				} else {
-
+				}
+				else
+				{
+					assert(max_tricks >= m.tricks());
+					max_ew_found = std::max<std::size_t>(max_ew_found, max_tricks - m.tricks());
 				}
 			}
 		}
@@ -81,12 +94,14 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 	{
 		//		std::cout << std::string(indent, ' ') << "Best move for NS: " << moves.back()
 		//				  << " (gives " << moves.back().tricks() << " trick(s))" << std::endl;
+		assert(!moves.back().is_max());
 		return moves.back();
 	}
 	else
 	{
 		//		std::cout << std::string(indent, ' ') << "Best move for EW: " << moves.front()
 		//				  << " (gives only " << moves.front().tricks() << " trick(s) for NS)" << std::endl;
+		assert(!moves.front().is_max());
 		return moves.front();
 	}
 }

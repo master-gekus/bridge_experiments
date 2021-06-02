@@ -314,17 +314,27 @@ public:
 	}
 
 public:
-	inline int tricks() const
+	inline std::size_t tricks() const noexcept
 	{
-		return static_cast<int>(tricks_);
+		return static_cast<std::size_t>(tricks_);
 	}
 
-	inline void add_tricks(uint8_t new_tricks)
+	inline void add_tricks(uint8_t tricks_to_add) noexcept
 	{
-		tricks_ += new_tricks;
+		tricks_ += tricks_to_add;
 	}
 
-public:
+	inline void set_tricks(uint8_t new_tricks) noexcept
+	{
+		tricks_ = new_tricks;
+	}
+
+	inline bool is_max() const noexcept
+	{
+		return (std::numeric_limits<decltype(tricks_)>::max() == tricks_);
+	}
+
+private:
 	uint8_t tricks_;
 };
 
