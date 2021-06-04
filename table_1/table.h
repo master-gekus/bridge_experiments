@@ -324,14 +324,18 @@ public:
 		return static_cast<std::size_t>(tricks_);
 	}
 
-	inline void add_tricks(uint8_t tricks_to_add) noexcept
+	template <typename T>
+	inline std::enable_if_t<std::is_integral_v<T>>
+	add_tricks(T tricks_to_add) noexcept
 	{
-		tricks_ += tricks_to_add;
+		tricks_ += static_cast<uint8_t>(tricks_to_add);
 	}
 
-	inline void set_tricks(uint8_t new_tricks) noexcept
+	template <typename T>
+	inline std::enable_if_t<std::is_integral_v<T>>
+	set_tricks(T new_tricks) noexcept
 	{
-		tricks_ = new_tricks;
+		tricks_ = static_cast<uint8_t>(new_tricks);
 	}
 
 	inline bool is_max() const noexcept

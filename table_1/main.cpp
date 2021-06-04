@@ -145,9 +145,9 @@ process_table_res process_table(table_t& table, tables_hash& th)
 	uint64_t reused {0};
 	auto start {std::chrono::steady_clock::now()};
 	auto res {process_table(0, table, iterations, 0, 0, th, reused)};
-	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
-	double ips {(static_cast<double>(iterations) / static_cast<double>(dur)) / 1000.0};
-	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s), " << reused << " reused; "
+	auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};
+	double ips {static_cast<double>(iterations) / static_cast<double>(dur)};
+	std::cout << "took " << (dur / 1000) << " milliseconds (" << iterations << " iteration(s), " << reused << " reused; "
 			  << ips << " Mips)" << std::endl;
 
 	return process_table_res {static_cast<uint8_t>(res.tricks()), iterations};
@@ -183,10 +183,10 @@ void process_table(const YAML::Node& n)
 		results[side][suit_t::NoTrump] = res.tricks_;
 	}
 
-	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
-	double ips {(static_cast<double>(total_iterations) / static_cast<double>(dur)) / 1000.0};
-	std::cout << "Total took " << dur << " milliseconds (" << total_iterations << " iteration(s); "
-			  << ips << " Mips); " << th.size() << " table(s) saved "<< std::endl;
+	auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};
+	double ips {static_cast<double>(total_iterations) / static_cast<double>(dur)};
+	std::cout << "Total took " << (dur / 1000) << " milliseconds (" << total_iterations << " iteration(s); "
+			  << ips << " Mips); " << th.size() << " table(s) saved " << std::endl;
 
 	// Output result table
 	std::cout << std::string(12, ' ');
