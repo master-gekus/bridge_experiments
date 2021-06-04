@@ -1,6 +1,4 @@
-﻿#include "table.h"
-
-#include <cassert>
+﻿#include <cassert>
 
 #include <algorithm>
 #include <chrono>
@@ -12,6 +10,8 @@
 #include <yaml-cpp/yaml.h>
 
 #include <leveldb/db.h>
+
+#include "table.h"
 
 move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations,
 						std::size_t max_ns_found, std::size_t max_ew_found)
@@ -108,7 +108,13 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 	}
 }
 
-std::pair<uint8_t, uint64_t> process_table(table_t& table)
+struct process_table_res
+{
+	uint8_t tricks_;
+	uint64_t iterations_;
+};
+
+process_table_res process_table(table_t& table)
 {
 	std::cout << "Calculating for " << std::setw(18) << std::setiosflags(std::ios::left)
 			  << (std::string {"["} + (table.current_player() - 1).to_string() + ", "
@@ -122,7 +128,7 @@ std::pair<uint8_t, uint64_t> process_table(table_t& table)
 	double ips {(static_cast<double>(iterations) / static_cast<double>(dur)) / 1000.0};
 	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s); " << ips << " Mips)" << std::endl;
 
-	return std::make_pair(res.tricks(), dur);
+	return process_table_res {static_cast<uint8_t>(res.tricks()), iterations};
 }
 
 void process_table(const YAML::Node& n)
@@ -134,7 +140,9 @@ void process_table(const YAML::Node& n)
 		return;
 	}
 
-	std::map<side_t, std::map<suit_t, std::pair<uint8_t, uint64_t>>> results;
+	std::map<side_t, std::map<suit_t, uint8_t>> results;
+	uint64_t total_iterations {0};
+	auto start {std::chrono::steady_clock::now()};
 
 	for (std::size_t side = side_t::North; side <= side_t::West; ++side)
 	{
@@ -142,11 +150,20 @@ void process_table(const YAML::Node& n)
 		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
 		{
 			table.set_trump(trump);
-			results[side][trump] = process_table(table);
+			const auto res {process_table(table)};
+			total_iterations += res.iterations_;
+			results[side][trump] = res.tricks_;
 		}
 		table.set_trump(suit_t::NoTrump);
-		results[side][suit_t::NoTrump] = process_table(table);
+		const auto res {process_table(table)};
+		total_iterations += res.iterations_;
+		results[side][suit_t::NoTrump] = res.tricks_;
 	}
+
+	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
+	double ips {(static_cast<double>(total_iterations) / static_cast<double>(dur)) / 1000.0};
+	std::cout << "Total took " << dur << " milliseconds (" << total_iterations << " iteration(s); "
+			  << ips << " Mips)" << std::endl;
 
 	// Output result table
 	std::cout << std::string(12, ' ');
@@ -161,9 +178,9 @@ void process_table(const YAML::Node& n)
 		std::cout << std::setw(10) << side_t {side} << " :";
 		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
 		{
-			std::cout << std::setw(10) << static_cast<int>(results[side][trump].first);
+			std::cout << std::setw(10) << static_cast<int>(results[side][trump]);
 		}
-		std::cout << std::setw(10) << static_cast<int>(results[side][suit_t::NoTrump].first) << std::endl;
+		std::cout << std::setw(10) << static_cast<int>(results[side][suit_t::NoTrump]) << std::endl;
 	}
 
 	// Compare with stored results
@@ -178,7 +195,7 @@ void process_table(const YAML::Node& n)
 			const auto src {rc[side_t {side}.to_string_short()]};
 			for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
 			{
-				if (src[trump].as<int>() != static_cast<int>(results[side][trump].first))
+				if (src[trump].as<int>() != static_cast<int>(results[side][trump]))
 				{
 					is_match = false;
 					side_mismatch = side;
@@ -190,7 +207,7 @@ void process_table(const YAML::Node& n)
 			{
 				break;
 			}
-			if (src[4].as<int>() != static_cast<int>(results[side][suit_t::NoTrump].first))
+			if (src[4].as<int>() != static_cast<int>(results[side][suit_t::NoTrump]))
 			{
 				is_match = false;
 				side_mismatch = side;

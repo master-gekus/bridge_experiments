@@ -55,10 +55,10 @@
 #      East :         5         3         5         2         2
 #     South :         4         2         4         2         2
 #      West :         4         3         5         2         2
+# Total took 1414847 milliseconds (2644946501 iteration(s); 1.86942 Mips)
 
-
-
-#- North: 102
-#  East: AK
-#  South: 102
-#  West: JQ
+  Result:
+    N: [3,3,5,1,2]
+    E: [5,3,5,2,2]
+    S: [4,2,4,2,2]
+    W: [4,3,5,2,2]
