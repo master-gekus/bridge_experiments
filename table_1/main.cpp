@@ -13,8 +13,11 @@
 
 #include "table.h"
 
+using tables_hash = std::map<table_t, std::vector<move_ex_t>>;
+
 move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations,
-						std::size_t max_ns_found, std::size_t max_ew_found)
+						std::size_t max_ns_found, std::size_t max_ew_found,
+						tables_hash& th, uint64_t& reused)
 {
 	assert(!t.empty());
 
@@ -23,75 +26,92 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 		std::cout << std::setw(16) << iterations << std::string(16, '\b') << std::flush;
 	}
 
-	auto moves {t.available_moves()};
-	assert(!moves.empty());
-
 	bool is_last_move {t.is_last_move()};
 	side_t current_player {t.current_player()};
 	bool is_ns {current_player.is_ns()};
 	std::size_t max_tricks {t.hand(current_player).size()};
 
-	for (std::size_t i = 0; i < moves.size(); ++i)
+	std::vector<move_ex_t> local_moves {};
+	std::vector<move_ex_t>* moves_to_use {&local_moves};
+
+	if ((2 < max_tricks) && t.is_first_move())
 	{
-		assert(max_ns_found <= max_tricks);
-		assert(max_ew_found <= max_tricks);
+		moves_to_use = &(th[t]);
+	}
 
-		auto& m {moves[i]};
-		if ((0 < i) && m.is_neighbor(moves[i - 1]))
+	auto& moves {*moves_to_use};
+	if (!moves.empty())
+	{
+		++reused;
+	}
+	else
+	{
+		moves = t.available_moves();
+		assert(!moves.empty());
+
+		for (std::size_t i = 0; i < moves.size(); ++i)
 		{
-			m.add_tricks(moves[i - 1].tricks());
-			continue;
-		}
+			assert(max_ns_found <= max_tricks);
+			assert(max_ew_found <= max_tricks);
 
-		//		std::cout << std::string(indent, ' ') << t.current_player() << " makes move \"" << m << "\" :" << std::endl;
-		table_t nt {t};
-
-		side_t winer {nt.make_move(m)};
-
-		if (is_last_move)
-		{
-			//			std::cout << std::string(indent, ' ') << (winer.is_ns() ? "NS" : "EW") << "wins a trick." << std::endl;
-			if (winer.is_ns())
+			auto& m {moves[i]};
+			if ((0 < i) && m.is_neighbor(moves[i - 1]))
 			{
-				if (max_ew_found >= max_tricks)
-				{
-					m.set_tricks(max_tricks);
-					continue;
-				}
-
-				m.add_tricks(1);
-				max_ns_found = (0 < max_ns_found) ? (max_ns_found - 1) : 0;
+				m.add_tricks(moves[i - 1].tricks());
+				continue;
 			}
-			else
-			{
-				if (max_ns_found >= max_tricks)
-				{
-					continue;
-				}
 
-				max_ew_found = (0 < max_ew_found) ? (max_ew_found - 1) : 0;
-			}
-		}
+			//		std::cout << std::string(indent, ' ') << t.current_player() << " makes move \"" << m << "\" :" << std::endl;
+			table_t nt {t};
 
-		if (!nt.empty())
-		{
-			m.add_tricks(process_table(indent + 2, nt, iterations, max_ns_found, max_ew_found).tricks());
+			side_t winer {nt.make_move(m)};
+
 			if (is_last_move)
 			{
-				if (is_ns)
+				//			std::cout << std::string(indent, ' ') << (winer.is_ns() ? "NS" : "EW") << "wins a trick." << std::endl;
+				if (winer.is_ns())
 				{
-					max_ns_found = std::max<std::size_t>(max_ns_found, m.tricks());
+					if (max_ew_found >= max_tricks)
+					{
+						m.set_tricks(max_tricks);
+						continue;
+					}
+
+					m.add_tricks(1);
+					max_ns_found = (0 < max_ns_found) ? (max_ns_found - 1) : 0;
 				}
 				else
 				{
-					assert(max_tricks >= m.tricks());
-					max_ew_found = std::max<std::size_t>(max_ew_found, max_tricks - m.tricks());
+					if (max_ns_found >= max_tricks)
+					{
+						continue;
+					}
+
+					max_ew_found = (0 < max_ew_found) ? (max_ew_found - 1) : 0;
+				}
+			}
+
+			if (!nt.empty())
+			{
+				m.add_tricks(process_table(indent + 2, nt, iterations, max_ns_found, max_ew_found, th, reused).tricks());
+				if (is_last_move)
+				{
+					if (is_ns)
+					{
+						max_ns_found = std::max<std::size_t>(max_ns_found, m.tricks());
+					}
+					else
+					{
+						assert(max_tricks >= m.tricks());
+						max_ew_found = std::max<std::size_t>(max_ew_found, max_tricks - m.tricks());
+					}
 				}
 			}
 		}
+
+		std::sort(moves.begin(), moves.end());
 	}
 
-	std::sort(moves.begin(), moves.end());
 	if (is_ns)
 	{
 		//		std::cout << std::string(indent, ' ') << "Best move for NS: " << moves.back()
@@ -114,7 +134,7 @@ struct process_table_res
 	uint64_t iterations_;
 };
 
-process_table_res process_table(table_t& table)
+process_table_res process_table(table_t& table, tables_hash& th)
 {
 	std::cout << "Calculating for " << std::setw(18) << std::setiosflags(std::ios::left)
 			  << (std::string {"["} + (table.current_player() - 1).to_string() + ", "
@@ -122,11 +142,13 @@ process_table_res process_table(table_t& table)
 			  << ": " << std::resetiosflags(std::ios::left) << std::flush;
 
 	uint64_t iterations {0};
+	uint64_t reused {0};
 	auto start {std::chrono::steady_clock::now()};
-	auto res {process_table(0, table, iterations, 0, 0)};
+	auto res {process_table(0, table, iterations, 0, 0, th, reused)};
 	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
 	double ips {(static_cast<double>(iterations) / static_cast<double>(dur)) / 1000.0};
-	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s); " << ips << " Mips)" << std::endl;
+	std::cout << "took " << dur << " milliseconds (" << iterations << " iteration(s), " << reused << " reused; "
+			  << ips << " Mips)" << std::endl;
 
 	return process_table_res {static_cast<uint8_t>(res.tricks()), iterations};
 }
@@ -141,6 +163,7 @@ void process_table(const YAML::Node& n)
 	}
 
 	std::map<side_t, std::map<suit_t, uint8_t>> results;
+	tables_hash th;
 	uint64_t total_iterations {0};
 	auto start {std::chrono::steady_clock::now()};
 
@@ -150,12 +173,12 @@ void process_table(const YAML::Node& n)
 		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
 		{
 			table.set_trump(trump);
-			const auto res {process_table(table)};
+			const auto res {process_table(table, th)};
 			total_iterations += res.iterations_;
 			results[side][trump] = res.tricks_;
 		}
 		table.set_trump(suit_t::NoTrump);
-		const auto res {process_table(table)};
+		const auto res {process_table(table, th)};
 		total_iterations += res.iterations_;
 		results[side][suit_t::NoTrump] = res.tricks_;
 	}
@@ -163,7 +186,7 @@ void process_table(const YAML::Node& n)
 	auto dur {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count()};
 	double ips {(static_cast<double>(total_iterations) / static_cast<double>(dur)) / 1000.0};
 	std::cout << "Total took " << dur << " milliseconds (" << total_iterations << " iteration(s); "
-			  << ips << " Mips)" << std::endl;
+			  << ips << " Mips); " << th.size() << " table(s) saved "<< std::endl;
 
 	// Output result table
 	std::cout << std::string(12, ' ');

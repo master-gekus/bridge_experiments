@@ -148,6 +148,11 @@ public:
 		cards_ &= ~static_cast<underlying_type>(c);
 	}
 
+	inline constexpr bool operator<(const cards_t& other) const
+	{
+		return cards_ < other.cards_;
+	}
+
 	std::string to_string() const;
 	bool append(card_t c) noexcept;
 	std::size_t size() const noexcept;
@@ -405,6 +410,11 @@ public:
 	std::vector<move_ex_t> available_moves(const suit_t& suit) const;
 	void dump(std::ostream& os = std::cout) const;
 
+	inline bool operator<(const hand_t& other) const
+	{
+		return suites_ < other.suites_;
+	}
+
 private:
 	std::array<cards_t, 4> suites_;
 };
@@ -477,9 +487,29 @@ public:
 		return (3 == moves_.size());
 	}
 
+	inline bool is_first_move() const noexcept
+	{
+		return moves_.empty();
+	}
+
 	inline const hand_t& hand(const side_t& s) const noexcept
 	{
 		return hands_[s];
+	}
+
+	inline bool operator<(const table_t& other) const noexcept
+	{
+		if (trump_ != other.trump_)
+		{
+			return trump_ < other.trump_;
+		}
+
+		if (turn_starter_ != other.turn_starter_)
+		{
+			return turn_starter_ < other.turn_starter_;
+		}
+
+		return hands_ < other.hands_;
 	}
 
 private:
