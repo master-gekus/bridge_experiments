@@ -153,6 +153,11 @@ public:
 		return cards_ < other.cards_;
 	}
 
+	inline void get_hash(void* buffer) const noexcept
+	{
+		*static_cast<underlying_type*>(buffer) = cards_;
+	}
+
 	std::string to_string() const;
 	bool append(card_t c) noexcept;
 	std::size_t size() const noexcept;
@@ -419,6 +424,14 @@ public:
 		return suites_ < other.suites_;
 	}
 
+	inline void get_hash(uint8_t* buffer) const noexcept
+	{
+		suites_[0].get_hash(buffer + 0);
+		suites_[1].get_hash(buffer + 2);
+		suites_[2].get_hash(buffer + 4);
+		suites_[3].get_hash(buffer + 6);
+	}
+
 private:
 	std::array<cards_t, 4> suites_;
 };
@@ -426,7 +439,7 @@ private:
 class table_t
 {
 public:
-	using hash_t = std::array<uint8_t, (sizeof (uint64_t) * 4) + 2>;
+	using hash_t = std::array<uint8_t, (sizeof(uint64_t) * 4) + 2>;
 
 public:
 	table_t() = default;
@@ -524,7 +537,10 @@ public:
 		hash_t res;
 		res[0] = static_cast<uint8_t>(trump_);
 		res[1] = static_cast<uint8_t>(turn_starter_);
-
+		hands_[0].get_hash(&res[2 + (8 * 0)]);
+		hands_[1].get_hash(&res[2 + (8 * 1)]);
+		hands_[2].get_hash(&res[2 + (8 * 2)]);
+		hands_[3].get_hash(&res[2 + (8 * 3)]);
 		return res;
 	}
 
