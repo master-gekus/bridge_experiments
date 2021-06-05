@@ -13,7 +13,7 @@
 
 #include "table.h"
 
-using tables_hash = std::map<table_t::hash_t, std::vector<move_ex_t>>;
+using tables_hash = std::map<table_t::hash_t, std::map<suit_t, std::vector<move_ex_t>>>;
 
 move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iterations,
 						std::size_t max_ns_found, std::size_t max_ew_found,
@@ -36,7 +36,7 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 
 	if ((2 < max_tricks) && t.is_first_move())
 	{
-		moves_to_use = &(th[t.hash()]);
+		moves_to_use = &(th[t.hash()][t.trump()]);
 	}
 
 	auto& moves {*moves_to_use};
