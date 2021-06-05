@@ -30,3 +30,4 @@ option(LEVELDB_INSTALL OFF)
 FetchContent_MakeAvailable(leveldb_src)
 
 add_subdirectory(table_1)
+add_subdirectory(table_2)
