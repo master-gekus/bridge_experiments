@@ -231,6 +231,13 @@ public:
 		return *this;
 	}
 
+	inline side_t operator++(int)
+	{
+		uint8_t save {side_};
+		side_ = static_cast<uint8_t>((side_ + 1) % 4);
+		return side_t {save};
+	}
+
 public:
 	inline bool is_ns() const noexcept
 	{
@@ -308,6 +315,13 @@ public:
 	move_ex_t(const card_t& c, const suit_t& s)
 		: move_t {c, s}
 		, tricks_ {0}
+	{
+	}
+
+	template <typename T, typename = std::enable_if<std::is_integral_v<T>>>
+	move_ex_t(const card_t& c, const suit_t& s, T t)
+		: move_t {c, s}
+		, tricks_ {static_cast<uint8_t>(t)}
 	{
 	}
 
@@ -439,7 +453,7 @@ private:
 class table_t
 {
 public:
-	using hash_t = std::array<uint8_t, (sizeof(uint64_t) * 4) + 1>;
+	using hash_t = std::array<uint8_t, sizeof(uint64_t) * 4>;
 
 public:
 	table_t() = default;
@@ -535,11 +549,11 @@ public:
 	inline hash_t hash() const noexcept
 	{
 		hash_t res;
-		res[0] = static_cast<uint8_t>(turn_starter_);
-		hands_[0].get_hash(&res[1 + (8 * 0)]);
-		hands_[1].get_hash(&res[1 + (8 * 1)]);
-		hands_[2].get_hash(&res[1 + (8 * 2)]);
-		hands_[3].get_hash(&res[1 + (8 * 3)]);
+		auto ts {turn_starter_};
+		hands_[ts++].get_hash(&res[8 * 0]);
+		hands_[ts++].get_hash(&res[8 * 1]);
+		hands_[ts++].get_hash(&res[8 * 2]);
+		hands_[ts++].get_hash(&res[8 * 3]);
 		return res;
 	}
 

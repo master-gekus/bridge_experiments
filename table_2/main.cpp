@@ -26,20 +26,33 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 		std::cout << std::setw(16) << iterations << std::string(16, '\b') << std::flush;
 	}
 
-	bool is_last_move {t.is_last_move()};
-	side_t current_player {t.current_player()};
-	bool is_ns {current_player.is_ns()};
-	std::size_t max_tricks {t.hand(current_player).size()};
+	const bool is_last_move {t.is_last_move()};
+	const side_t current_player {t.current_player()};
+	const bool is_ns {current_player.is_ns()};
+	const std::size_t max_tricks {t.hand(current_player).size()};
+	const bool use_cache {(2 < max_tricks) && t.is_first_move()};
 
-	std::vector<move_ex_t> local_moves {};
-	std::vector<move_ex_t>* moves_to_use {&local_moves};
+	std::vector<move_ex_t> moves {};
+	std::vector<move_ex_t>* moves_in_cache {nullptr};
 
-	if ((2 < max_tricks) && t.is_first_move())
+	if (use_cache)
 	{
-		moves_to_use = &(th[t.hash()][t.trump()]);
+		moves_in_cache = &(th[t.hash()][t.trump()]);
+
+		if (is_ns)
+		{
+			moves = (*moves_in_cache);
+		}
+		else
+		{
+			moves.reserve(moves_in_cache->size());
+			for (auto it {moves_in_cache->crbegin()}; moves_in_cache->crend() != it; ++it)
+			{
+				moves.emplace_back(it->card(), it->suit(), max_tricks - it->tricks());
+			}
+		}
 	}
 
-	auto& moves {*moves_to_use};
 	if (!moves.empty())
 	{
 		++reused;
@@ -110,6 +123,22 @@ move_ex_t process_table(std::size_t indent, const table_t& t, uint64_t& iteratio
 		}
 
 		std::sort(moves.begin(), moves.end());
+
+		if (nullptr != moves_in_cache)
+		{
+			if (is_ns)
+			{
+				*moves_in_cache = moves;
+			}
+			else
+			{
+				moves_in_cache->reserve(moves.size());
+				for (auto it {moves.crbegin()}; moves.crend() != it; ++it)
+				{
+					moves_in_cache->emplace_back(it->card(), it->suit(), max_tricks - it->tricks());
+				}
+			}
+		}
 	}
 
 	if (is_ns)
