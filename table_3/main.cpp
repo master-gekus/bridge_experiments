@@ -30,18 +30,15 @@ void process_table(const YAML::Node& n, tables_hash& th)
 	uint64_t total_iterations {0};
 	auto start {std::chrono::steady_clock::now()};
 
-	for (std::size_t side = side_t::North; side <= side_t::West; ++side)
+	for (const auto& side : side_t::all())
 	{
 		table.set_starter(side + 1);
-		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
+		for (const auto& trump : suit_t::all())
 		{
 			table.set_trump(trump);
 			results[side][trump] = tp.process_table_internal(table);
 			total_iterations += tp.iterations();
 		}
-		table.set_trump(suit_t::NoTrump);
-		results[side][suit_t::NoTrump] = tp.process_table_internal(table);
-		total_iterations += tp.iterations();
 	}
 
 	auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};
@@ -51,55 +48,45 @@ void process_table(const YAML::Node& n, tables_hash& th)
 
 	// Output result table
 	std::cout << std::string(12, ' ');
-	for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
+	for (const auto& trump : suit_t::all())
 	{
 		std::cout << std::setw(10) << suit_t {trump};
 	}
-	std::cout << std::setw(10) << suit_t {suit_t::NoTrump} << std::endl;
+	std::cout << std::endl;
 
-	for (std::size_t side = side_t::North; side <= side_t::West; ++side)
+	for (const auto& side : side_t::all())
 	{
 		std::cout << std::setw(10) << side_t {side} << " :";
-		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
+		for (const auto& trump : suit_t::all())
 		{
 			std::cout << std::setw(10) << static_cast<int>(results[side][trump]);
 		}
-		std::cout << std::setw(10) << static_cast<int>(results[side][suit_t::NoTrump]) << std::endl;
+		std::cout << std::endl;
 	}
 
 	// Compare with stored results
 	try
 	{
 		const auto rc {n["Result"]};
-		bool is_match {true};
 		side_t side_mismatch;
 		suit_t suit_mismatch;
-		for (std::size_t side = side_t::North; side <= side_t::West; ++side)
-		{
-			const auto src {rc[side_t {side}.to_string_short()]};
-			for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
-			{
-				if (src[trump].as<int>() != static_cast<int>(results[side][trump]))
+		if ([&]() {
+				for (const auto& side : side_t::all())
 				{
-					is_match = false;
-					side_mismatch = side;
-					suit_mismatch = trump;
-					break;
+					const auto src {rc[side.to_string_short()]};
+					for (const auto& trump : suit_t::all())
+					{
+						if (src[static_cast<uint8_t>(trump)].as<int>() != static_cast<int>(results[side][trump]))
+						{
+							side_mismatch = side;
+							suit_mismatch = trump;
+							return false;
+							break;
+						}
+					}
 				}
-			}
-			if (!is_match)
-			{
-				break;
-			}
-			if (src[4].as<int>() != static_cast<int>(results[side][suit_t::NoTrump]))
-			{
-				is_match = false;
-				side_mismatch = side;
-				suit_mismatch = suit_t::NoTrump;
-				break;
-			}
-		}
-		if (is_match)
+				return true;
+			}())
 		{
 			std::cout << "Results match stored results." << std::endl;
 		}

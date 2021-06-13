@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#include <array>
 #include <type_traits>
 
 /**
@@ -62,9 +63,18 @@ struct card_t
 
 	const char* to_string() const noexcept;
 
+	static inline constexpr const auto& all() noexcept
+	{
+		return all_;
+	}
+
 private:
 	underlying_type card_;
+
+	static const std::array<card_t, 13> all_;
 };
+
+inline constexpr std::array<card_t, 13> card_t::all_ {C_2, C_3, C_4, C_5, C_6, C_7, C_8, C_9, C_10, Jack, Queen, King, Ace};
 
 static_assert(std::is_trivial_v<card_t>);
 static_assert(sizeof(card_t) == sizeof(uint16_t));
@@ -127,9 +137,18 @@ struct suit_t
 	const char* to_string() const noexcept;
 	const char* to_string_short() const noexcept;
 
+	static inline constexpr const auto& all() noexcept
+	{
+		return all_;
+	}
+
 private:
 	underlying_type suit_;
+
+	static const std::array<suit_t, 5> all_;
 };
+
+inline constexpr std::array<suit_t, 5> suit_t::all_ {Clubs, Diamonds, Hearts, Spades, NoTrump};
 
 static_assert(std::is_trivial_v<suit_t>);
 static_assert(sizeof(suit_t) == sizeof(uint8_t));
@@ -211,9 +230,18 @@ struct side_t
 	const char* to_string() const noexcept;
 	const char* to_string_short() const noexcept;
 
+	static inline constexpr const auto& all() noexcept
+	{
+		return all_;
+	}
+
 private:
 	uint8_t side_;
+
+	static const std::array<side_t, 4> all_;
 };
+
+inline constexpr std::array<side_t, 4> side_t::all_ {North, East, South, West};
 
 static_assert(std::is_trivial_v<side_t>);
 static_assert(sizeof(side_t) == sizeof(uint8_t));

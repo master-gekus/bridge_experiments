@@ -32,11 +32,11 @@ std::string cards_t::to_string() const
 	}
 
 	std::string res;
-	for (auto c = static_cast<underlying_type>(card_t::Ace); c; c >>= 1)
+	for (const auto& c : card_t::all())
 	{
 		if (0 != (cards_ & c))
 		{
-			res += card_t {c}.to_string();
+			res += c.to_string();
 		}
 	}
 
@@ -72,11 +72,11 @@ std::size_t cards_t::size() const noexcept
 
 void cards_t::get_moves(std::vector<move_ex_t>& res, const suit_t& suit) const
 {
-	for (underlying_type i = card_t::C_2; i <= card_t::Ace; i <<= 1)
+	for (const auto& c : card_t::all())
 	{
-		if (0 != (cards_ & i))
+		if (0 != (cards_ & c))
 		{
-			res.emplace_back(card_t{i}, suit);
+			res.emplace_back(c, suit);
 		}
 	}
 }
@@ -209,7 +209,7 @@ side_t table_t::make_move(const move_t& m)
 	hands_[side].remove(m);
 	moves_.push_back(m);
 
-	if (4== moves_.size())
+	if (4 == moves_.size())
 	{
 		std::size_t winer {0};
 		for (std::size_t i = 1; i < moves_.size(); ++i)
@@ -219,7 +219,7 @@ side_t table_t::make_move(const move_t& m)
 				winer = i;
 			}
 		}
-		turn_starter_ = turn_starter_+ winer;
+		turn_starter_ = turn_starter_ + winer;
 		moves_.clear();
 	}
 
