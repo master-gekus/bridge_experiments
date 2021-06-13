@@ -179,9 +179,9 @@ public:
 	}
 
 public:
-	inline std::size_t tricks() const noexcept
+	inline uint8_t tricks() const noexcept
 	{
-		return static_cast<std::size_t>(tricks_);
+		return tricks_;
 	}
 
 	template <typename T>
@@ -294,7 +294,9 @@ private:
 class table_t
 {
 public:
-	using hash_t = std::array<uint8_t, sizeof(uint64_t) * 4>;
+	using hash_type = std::array<uint8_t, sizeof(uint64_t) * 4>;
+	using move_type = move_ex_t;
+	using moves_type = std::vector<move_ex_t>;
 
 public:
 	table_t() = default;
@@ -387,9 +389,9 @@ public:
 		return hands_ < other.hands_;
 	}
 
-	inline hash_t hash() const noexcept
+	inline hash_type hash() const noexcept
 	{
-		hash_t res;
+		hash_type res;
 		auto ts {turn_starter_};
 		hands_[ts++].get_hash(&res[8 * 0]);
 		hands_[ts++].get_hash(&res[8 * 1]);

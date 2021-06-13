@@ -3,9 +3,12 @@
 
 #include <cassert>
 
+#include <algorithm>
 #include <chrono>
+#include <map>
+#include <string>
 
-#include "table_first.h"
+#include "enums.hpp"
 
 class table_processor_base
 {
@@ -61,23 +64,26 @@ private:
 	uint64_t m_reused {0};
 };
 
+template <typename TableType>
 class table_processor : public table_processor_base
 {
 public:
-	using table_type = table_t;
-	using move_type = move_ex_t;
-	using moves_type = std::vector<move_ex_t>;
+	using table_type = TableType;
+	using move_type = typename table_type::move_type;
+	using moves_type = typename table_type::moves_type;
+	using result_type = std::map<side_t, std::map<suit_t, uint8_t>>;
 
-	using tables_hash_type = std::map<table_t::hash_t, std::map<suit_t, std::vector<move_ex_t>>>;
+	// temporary!!!
+	using table_cache_type = std::map<typename table_type::hash_type, std::map<suit_t, moves_type>>;
 
 public:
-	inline table_processor(tables_hash_type& th, bool suppress_output = false) noexcept
+	inline table_processor(table_cache_type& tc, bool suppress_output = false) noexcept
 		: table_processor_base {suppress_output}
-		, m_th {th}
+		, tc_ {tc}
 	{
 	}
 
-public:
+private:
 	inline move_type process_table_internal(std::size_t indent, const table_type& t,
 											std::size_t max_ns_found, std::size_t max_ew_found)
 	{
@@ -99,7 +105,7 @@ public:
 
 		if (use_cache)
 		{
-			moves_in_cache = &(m_th[t.hash()][t.trump()]);
+			moves_in_cache = &(tc_[t.hash()][t.trump()]);
 
 			if (is_ns)
 			{
@@ -213,7 +219,7 @@ public:
 		}
 	}
 
-	std::size_t process_table_internal(table_type& table)
+	uint8_t process_table_internal(table_type& table)
 	{
 		restart_processing(std::string {"["} + (table.current_player() - 1).to_string()
 						   + ", " + table.trump().to_string() + "]");
@@ -225,8 +231,46 @@ public:
 		return res.tricks();
 	}
 
+public:
+	inline result_type process_table(table_type table)
+	{
+		using namespace std::chrono;
+
+		result_type result;
+
+		total_iterations_ = 0;
+		auto start {steady_clock::now()};
+
+		for (const auto& side : side_t::all())
+		{
+			table.set_starter(side + 1);
+			for (const auto& trump : suit_t::all())
+			{
+				table.set_trump(trump);
+				result[side][trump] = process_table_internal(table);
+				total_iterations_ += iterations();
+			}
+		}
+
+		total_duration_ = duration_cast<microseconds>(steady_clock::now() - start).count();
+
+		return result;
+	}
+
+	inline auto total_iterations() const noexcept
+	{
+		return total_iterations_;
+	}
+
+	inline auto total_duration() const noexcept
+	{
+		return total_duration_;
+	}
+
 private:
-	tables_hash_type& m_th;
+	table_cache_type& tc_;
+	uint64_t total_iterations_ {0};
+	uint64_t total_duration_ {0};
 };
 
 #endif // TABLE_PROCESSOR_HPP

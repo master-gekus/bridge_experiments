@@ -11,12 +11,12 @@
 
 #include <leveldb/db.h>
 
-#include "table_first.h"
 #include "table_processor.hpp"
+#include "table_first.h"
 
-using tables_hash = std::map<table_t::hash_t, std::map<suit_t, std::vector<move_ex_t>>>;
+using table_cache = typename table_processor<table_t>::table_cache_type;
 
-void process_table(const YAML::Node& n, tables_hash& th)
+void process_table(const YAML::Node& n, table_cache& tc)
 {
 	table_t table {n};
 	table.dump();
@@ -25,26 +25,13 @@ void process_table(const YAML::Node& n, tables_hash& th)
 		return;
 	}
 
-	std::map<side_t, std::map<suit_t, std::size_t>> results;
-	table_processor tp {th};
-	uint64_t total_iterations {0};
-	auto start {std::chrono::steady_clock::now()};
+	table_processor<table_t> tp {tc};
+	auto results {tp.process_table(table)};
 
-	for (const auto& side : side_t::all())
-	{
-		table.set_starter(side + 1);
-		for (const auto& trump : suit_t::all())
-		{
-			table.set_trump(trump);
-			results[side][trump] = tp.process_table_internal(table);
-			total_iterations += tp.iterations();
-		}
-	}
-
-	auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};
-	double ips {static_cast<double>(total_iterations) / static_cast<double>(dur)};
-	std::cout << "Total took " << (dur / 1000) << " milliseconds (" << total_iterations << " iteration(s); "
-			  << ips << " Mips); " << th.size() << " table(s) saved " << std::endl;
+	double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
+	std::cout << "Total took " << (tp.total_duration() / 1000) << " milliseconds ("
+			  << tp.total_iterations() << " iteration(s); "
+			  << ips << " Mips); " << tc.size() << " table(s) saved " << std::endl;
 
 	// Output result table
 	std::cout << std::string(12, ' ');
@@ -119,14 +106,14 @@ int main(int argc, char** argv)
 
 	try
 	{
-		tables_hash th {};
+		table_cache tc {};
 		std::size_t index {0};
 		for (const auto& ts : YAML::LoadFile(argv[1]))
 		{
 			std::cout << std::string(40, '=') << std::endl;
 			std::cout << "Table #" << (++index) << std::endl;
 
-			process_table(ts, th);
+			process_table(ts, tc);
 
 			std::cout << std::string(40, '=') << std::endl;
 			std::cout << std::endl;
