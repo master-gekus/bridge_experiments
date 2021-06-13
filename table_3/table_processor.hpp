@@ -3,13 +3,65 @@
 
 #include <cassert>
 
-#include <iostream>
-#include <iomanip>
 #include <chrono>
 
 #include "table_first.h"
 
-class table_processor
+class table_processor_base
+{
+public:
+	inline explicit table_processor_base(bool suppress_output = false)
+		: m_suppress_output {suppress_output}
+		, m_iterations {0}
+		, m_reused {0}
+	{
+	}
+
+	inline auto iterations() const noexcept
+	{
+		return m_iterations;
+	}
+
+	inline auto& iterations() noexcept
+	{
+		return m_iterations;
+	}
+
+	inline auto reused() const noexcept
+	{
+		return m_reused;
+	}
+
+	inline auto& reused() noexcept
+	{
+		return m_reused;
+	}
+
+	inline void restart_processing(const std::string& message) noexcept
+	{
+		m_iterations = 0;
+		m_reused = 0;
+		out_calculating_started(message);
+	}
+
+	void out_calculating_started(const std::string& message) const;
+	void out_iterations() const;
+	void out_calculating_fineshed(std::chrono::microseconds::rep microseconds_passed) const;
+
+	template <class Rep, class Period>
+	inline void out_calculating_fineshed(std::chrono::duration<Rep, Period> dur)
+	{
+		using namespace std::chrono;
+		out_calculating_fineshed(std::chrono::duration_cast<std::chrono::microseconds>(dur).count());
+	}
+
+private:
+	bool m_suppress_output {false};
+	uint64_t m_iterations {0};
+	uint64_t m_reused {0};
+};
+
+class table_processor : public table_processor_base
 {
 public:
 	using table_type = table_t;
@@ -19,8 +71,9 @@ public:
 	using tables_hash_type = std::map<table_t::hash_t, std::map<suit_t, std::vector<move_ex_t>>>;
 
 public:
-	inline table_processor(tables_hash_type& th) noexcept
-		: m_th {th}
+	inline table_processor(tables_hash_type& th, bool suppress_output = false) noexcept
+		: table_processor_base {suppress_output}
+		, m_th {th}
 	{
 	}
 
@@ -30,9 +83,9 @@ public:
 	{
 		assert(!t.empty());
 
-		if (0 == ((++m_iterations) % 1000000))
+		if (0 == ((++iterations()) % 1000000))
 		{
-			std::cout << std::setw(16) << m_iterations << std::string(16, '\b') << std::flush;
+			out_iterations();
 		}
 
 		const bool is_last_move {t.is_last_move()};
@@ -64,7 +117,7 @@ public:
 
 		if (!moves.empty())
 		{
-			++m_reused;
+			++reused();
 		}
 		else
 		{
@@ -167,36 +220,12 @@ public:
 
 		auto start {std::chrono::steady_clock::now()};
 		auto res {process_table_internal(0, table, 0, 0)};
-		auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};
-		double ips {static_cast<double>(m_iterations) / static_cast<double>(dur)};
-		std::cout << "took " << (dur / 1000) << " milliseconds (" << m_iterations << " iteration(s), "
-				  << m_reused << " reused; "
-				  << ips << " Mips)" << std::endl;
+		out_calculating_fineshed(std::chrono::steady_clock::now() - start);
 
 		return res.tricks();
 	}
 
-	inline uint64_t iterations() const noexcept
-	{
-		return m_iterations;
-	}
-
-	inline uint64_t reused() const noexcept
-	{
-		return m_reused;
-	}
-
-	inline void restart_processing(const std::string& message) noexcept
-	{
-		m_iterations = 0;
-		m_reused = 0;
-		std::cout << "Calculating for " << std::setw(18) << std::setiosflags(std::ios::left)
-				  << message << ": " << std::resetiosflags(std::ios::left) << std::flush;
-	}
-
 private:
-	uint64_t m_iterations {0};
-	uint64_t m_reused {0};
 	tables_hash_type& m_th;
 };
 
