@@ -4,6 +4,8 @@ project(table_3 LANGUAGES CXX)
 
 add_executable(${PROJECT_NAME}
 	main.cpp
+	enums.hpp
+	enums.cpp
 	table_first.h
 	table_first.cpp
 	table_processor.hpp

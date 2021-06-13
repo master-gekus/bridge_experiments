@@ -13,90 +13,15 @@
 
 #include <yaml-cpp/yaml.h>
 
-enum card_t : uint16_t
-{
-	C_2 = (1 << 0),
-	C_3 = (1 << 1),
-	C_4 = (1 << 2),
-	C_5 = (1 << 3),
-	C_6 = (1 << 4),
-	C_7 = (1 << 5),
-	C_8 = (1 << 6),
-	C_9 = (1 << 7),
-	C_10 = (1 << 8),
-	Jack = (1 << 9),
-	Queen = (1 << 10),
-	King = (1 << 11),
-	Ace = (1 << 12),
-};
+#include "enums.hpp"
 
-card_t next_card_from_string(const char*& str);
-const char* to_string(card_t c) noexcept;
-inline constexpr bool is_neighbors(card_t a, card_t b)
-{
-	return ((a << 1) == b) || ((b << 1) == a);
-}
-
-class suit_t
-{
-public:
-	enum suits : uint8_t
-	{
-		Clubs = 0,
-		Diamonds = 1,
-		Hearts = 2,
-		Spades = 3,
-		NoTrump = std::numeric_limits<uint8_t>::max(),
-	};
-
-	inline constexpr suit_t() noexcept
-		: suit_ {0}
-	{
-	}
-
-	inline constexpr suit_t(suits s) noexcept
-		: suit_ {(NoTrump == s) ? static_cast<uint8_t>(NoTrump) : static_cast<uint8_t>(static_cast<uint8_t>(s) % 4)}
-	{
-	}
-
-	template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-	inline constexpr suit_t(T s)
-		: suit_ {static_cast<uint8_t>(s % 4)}
-	{
-	}
-
-	explicit suit_t(const char* str, bool allow_nt = false);
-
-	inline explicit suit_t(const YAML::Node& n, bool allow_nt = false)
-		: suit_t {n.as<std::string>().c_str(), allow_nt}
-	{
-	}
-
-	inline operator std::size_t() const noexcept
-	{
-		return static_cast<std::size_t>(suit_);
-	}
-
-	inline suit_t& operator++()
-	{
-		suit_ = static_cast<uint8_t>((suit_ + 1) % 4);
-		return *this;
-	}
-
-public:
-	const char* to_string() const noexcept;
-	const char* to_string_short() const noexcept;
-
-private:
-	uint8_t suit_;
-};
 
 class move_ex_t;
 
 class cards_t
 {
 private:
-	using underlying_type = std::underlying_type_t<card_t>;
+	using underlying_type = typename card_t::underlying_type;
 
 public:
 	inline cards_t() noexcept
@@ -167,90 +92,6 @@ private:
 	underlying_type cards_;
 };
 
-class side_t
-{
-public:
-	enum sides : uint8_t
-	{
-		North = 0,
-		East = 1,
-		South = 2,
-		West = 3,
-	};
-
-	inline constexpr side_t() noexcept
-		: side_ {0}
-	{
-	}
-
-	inline constexpr side_t(sides v)
-		: side_ {static_cast<uint8_t>(static_cast<uint8_t>(v) % 4)}
-	{
-	}
-
-	template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-	inline constexpr side_t(T v)
-		: side_ {static_cast<uint8_t>(v % 4)}
-	{
-	}
-
-	template <typename T>
-	inline constexpr std::enable_if_t<std::is_integral_v<T>, side_t>
-	operator+(T term) const noexcept
-	{
-		return side_t {side_ + 4 + (term % 4)};
-	}
-
-	template <typename T>
-	inline constexpr std::enable_if_t<std::is_integral_v<T>, side_t>
-	operator-(T term) const noexcept
-	{
-		return side_t {side_ + 4 - (term % 4)};
-	}
-
-	explicit side_t(const char* str);
-	inline explicit side_t(const YAML::Node& n)
-		: side_t {n.as<std::string>().c_str()}
-	{
-	}
-
-	~side_t() = default;
-	side_t(const side_t&) = default;
-	side_t(side_t&&) = default;
-	side_t& operator=(const side_t&) = default;
-	side_t& operator=(side_t&&) = default;
-
-	inline operator std::size_t() const noexcept
-	{
-		return static_cast<std::size_t>(side_);
-	}
-
-	inline side_t& operator++()
-	{
-		side_ = static_cast<uint8_t>((side_ + 1) % 4);
-		return *this;
-	}
-
-	inline side_t operator++(int)
-	{
-		uint8_t save {side_};
-		side_ = static_cast<uint8_t>((side_ + 1) % 4);
-		return side_t {save};
-	}
-
-public:
-	inline bool is_ns() const noexcept
-	{
-		return (North == static_cast<sides>(side_)) || (South == static_cast<sides>(side_));
-	}
-
-	const char* to_string() const noexcept;
-	const char* to_string_short() const noexcept;
-
-private:
-	uint8_t side_;
-};
-
 class move_t
 {
 public:
@@ -287,17 +128,17 @@ public:
 
 	inline std::string to_string() const
 	{
-		return std::string {::to_string(card_)} + suit_.to_string_short();
+		return std::string {card_.to_string()} + suit_.to_string_short();
 	}
 
-	inline bool is_beat(const move_t& m, const suit_t& trump) const noexcept
+	inline bool constexpr is_beat(const move_t& m, const suit_t& trump) const noexcept
 	{
 		return (m.suit_ == suit_) ? (card_ > m.card_) : (trump == suit_);
 	}
 
-	inline bool is_neighbor(const move_t& other) const noexcept
+	inline bool constexpr is_neighbor(const move_t& other) const noexcept
 	{
-		return (suit_ == other.suit_) && is_neighbors(card_, other.card_);
+		return (suit_ == other.suit_) && card_.is_neighbors(other.card_);
 	}
 
 private:
@@ -466,8 +307,8 @@ public:
 
 	inline explicit table_t(const YAML::Node& n)
 		: hands_ {hand_t {n["N"]}, hand_t {n["E"]}, hand_t {n["S"]}, hand_t {n["W"]}}
-		, trump_ {n["T"], true}
-		, turn_starter_ {n["TS"]}
+		, trump_ {n["T"].as<std::string>().c_str(), true}
+		, turn_starter_ {n["TS"].as<std::string>().c_str()}
 	{
 		for (const auto& m : n["M"])
 		{
