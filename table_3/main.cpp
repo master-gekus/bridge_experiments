@@ -16,32 +16,6 @@
 
 using tables_hash = std::map<table_t::hash_t, std::map<suit_t, std::vector<move_ex_t>>>;
 
-struct process_table_res
-{
-	uint8_t tricks_;
-	uint64_t iterations_;
-};
-
-process_table_res process_table(table_t& table, tables_hash& th)
-{
-	std::cout << "Calculating for " << std::setw(18) << std::setiosflags(std::ios::left)
-			  << (std::string {"["} + (table.current_player() - 1).to_string() + ", "
-				  + table.trump().to_string() + "]")
-			  << ": " << std::resetiosflags(std::ios::left) << std::flush;
-
-	table_processor tp {th};
-
-	auto start {std::chrono::steady_clock::now()};
-	auto res {tp.process_table_internal(0, table, 0, 0)};
-	auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};
-	double ips {static_cast<double>(tp.iterations()) / static_cast<double>(dur)};
-	std::cout << "took " << (dur / 1000) << " milliseconds (" << tp.iterations() << " iteration(s), "
-			  << tp.reused() << " reused; "
-			  << ips << " Mips)" << std::endl;
-
-	return process_table_res {static_cast<uint8_t>(res.tricks()), tp.iterations()};
-}
-
 void process_table(const YAML::Node& n, tables_hash& th)
 {
 	table_t table {n};
@@ -51,7 +25,8 @@ void process_table(const YAML::Node& n, tables_hash& th)
 		return;
 	}
 
-	std::map<side_t, std::map<suit_t, uint8_t>> results;
+	std::map<side_t, std::map<suit_t, std::size_t>> results;
+	table_processor tp {th};
 	uint64_t total_iterations {0};
 	auto start {std::chrono::steady_clock::now()};
 
@@ -61,14 +36,12 @@ void process_table(const YAML::Node& n, tables_hash& th)
 		for (std::size_t trump = suit_t::Clubs; trump <= suit_t::Spades; ++trump)
 		{
 			table.set_trump(trump);
-			const auto res {process_table(table, th)};
-			total_iterations += res.iterations_;
-			results[side][trump] = res.tricks_;
+			results[side][trump] = tp.process_table_internal(table);
+			total_iterations += tp.iterations();
 		}
 		table.set_trump(suit_t::NoTrump);
-		const auto res {process_table(table, th)};
-		total_iterations += res.iterations_;
-		results[side][suit_t::NoTrump] = res.tricks_;
+		results[side][suit_t::NoTrump] = tp.process_table_internal(table);
+		total_iterations += tp.iterations();
 	}
 
 	auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};

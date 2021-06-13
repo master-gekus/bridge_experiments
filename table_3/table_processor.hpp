@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <chrono>
 
 #include "table_first.h"
 
@@ -159,6 +160,22 @@ public:
 		}
 	}
 
+	std::size_t process_table_internal(table_type& table)
+	{
+		restart_processing(std::string {"["} + (table.current_player() - 1).to_string()
+						   + ", " + table.trump().to_string() + "]");
+
+		auto start {std::chrono::steady_clock::now()};
+		auto res {process_table_internal(0, table, 0, 0)};
+		auto dur {std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()};
+		double ips {static_cast<double>(m_iterations) / static_cast<double>(dur)};
+		std::cout << "took " << (dur / 1000) << " milliseconds (" << m_iterations << " iteration(s), "
+				  << m_reused << " reused; "
+				  << ips << " Mips)" << std::endl;
+
+		return res.tricks();
+	}
+
 	inline uint64_t iterations() const noexcept
 	{
 		return m_iterations;
@@ -167,6 +184,14 @@ public:
 	inline uint64_t reused() const noexcept
 	{
 		return m_reused;
+	}
+
+	inline void restart_processing(const std::string& message) noexcept
+	{
+		m_iterations = 0;
+		m_reused = 0;
+		std::cout << "Calculating for " << std::setw(18) << std::setiosflags(std::ios::left)
+				  << message << ": " << std::resetiosflags(std::ios::left) << std::flush;
 	}
 
 private:
