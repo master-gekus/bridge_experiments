@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include <iostream>
+#include <functional>
 #include <limits>
 #include <string>
 #include <type_traits>
@@ -186,9 +187,21 @@ public:
 			return data_[index];
 		}
 
+		inline bool operator==(const hash_type& other) const noexcept
+		{
+			return (0 == std::memcmp(data_, other.data_, sizeof(data_)));
+		}
+
 		inline bool operator<(const hash_type& other) const noexcept
 		{
-			return (0 > std::memcmp(data_, other.data_, sizeof (data_)));
+			return (0 > std::memcmp(data_, other.data_, sizeof(data_)));
+		}
+
+		inline size_t hash() const
+		{
+			const uint64_t* d {reinterpret_cast<const uint64_t*>(data_)};
+			std::hash<uint64_t> h {};
+			return h(d[0]) ^ h(d[1]) ^ h(d[2]) ^ h(d[3]);
 		}
 
 	private:
@@ -339,6 +352,19 @@ operator<<(std::ostream& os, const T& values)
 		std::cout << m;
 	}
 	return os;
+}
+
+namespace std
+{
+template <>
+class hash<first::table_t::hash_type>
+{
+public:
+	inline size_t operator()(const first::table_t::hash_type& h) const
+	{
+		return h.hash();
+	}
+};
 }
 
 #endif // TABLE_H

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include <map>
+#include <unordered_map>
 #include <string>
 
 #include "enums.hpp"
@@ -74,7 +75,7 @@ public:
 	using result_type = std::map<side_t, std::map<suit_t, uint8_t>>;
 
 	// temporary!!!
-	using table_cache_type = std::map<typename table_type::hash_type, std::map<suit_t, moves_type>>;
+	using table_cache_type = std::unordered_map<typename table_type::hash_type, std::map<suit_t, moves_type>>;
 
 public:
 	inline table_processor(table_cache_type& tc, bool suppress_output = false) noexcept
