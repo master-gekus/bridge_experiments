@@ -14,18 +14,18 @@
 #include "table_processor.hpp"
 #include "table_first.h"
 
-using table_cache = typename table_processor<table_t>::table_cache_type;
+using table_cache = typename table_processor<first::table_t>::table_cache_type;
 
 void process_table(const YAML::Node& n, table_cache& tc)
 {
-	table_t table {n};
+	first::table_t table {n};
 	table.dump();
 	if (!table.is_valid())
 	{
 		return;
 	}
 
-	table_processor<table_t> tp {tc};
+	table_processor<first::table_t> tp {tc};
 	auto results {tp.process_table(table)};
 
 	double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};

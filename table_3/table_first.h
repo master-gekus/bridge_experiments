@@ -15,6 +15,8 @@
 
 #include "enums.hpp"
 
+namespace first
+{
 
 class move_ex_t;
 
@@ -433,5 +435,6 @@ operator<<(std::ostream& os, const std::vector<move_ex_t>& moves)
 	}
 	return os;
 }
+} // namespace first
 
 #endif // TABLE_H

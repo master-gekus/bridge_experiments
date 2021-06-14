@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <stdexcept>
 
+namespace first
+{
+
 cards_t::cards_t(const char* str)
 	: cards_ {0}
 {
@@ -225,3 +228,5 @@ side_t table_t::make_move(const move_t& m)
 
 	return turn_starter_;
 }
+
+} // namespace first
