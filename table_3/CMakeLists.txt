@@ -6,6 +6,8 @@ add_executable(${PROJECT_NAME}
 	main.cpp
 	enums.hpp
 	enums.cpp
+	moves.hpp
+	moves.cpp
 	table_first.h
 	table_first.cpp
 	table_processor.hpp

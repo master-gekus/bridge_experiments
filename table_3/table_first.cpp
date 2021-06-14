@@ -199,7 +199,17 @@ bool table_t::is_valid() const noexcept
 	return true;
 }
 
-side_t table_t::make_move(const move_t& m)
+void table_t::get_available_moves(moves_type& moves) const
+{
+	moves.clear();
+
+	for (const auto m : available_moves())
+	{
+		moves.push_back(move_type {m.card(), m.suit(), m.tricks()});
+	}
+}
+
+side_t table_t::make_move(const ::move_t& m)
 {
 	suit_t suit {moves_.empty() ? m.suit() : moves_.front().suit()};
 	side_t side {turn_starter_ + moves_.size()};

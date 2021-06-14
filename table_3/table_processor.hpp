@@ -101,10 +101,13 @@ private:
 		const bool use_cache {(2 < max_tricks) && t.is_first_move()};
 
 		moves_type moves {};
+		moves.clear();
+
 		moves_type* moves_in_cache {nullptr};
 
 		if (use_cache)
 		{
+			tc_[t.hash()].try_emplace(t.trump(), moves);
 			moves_in_cache = &(tc_[t.hash()][t.trump()]);
 
 			if (is_ns)
@@ -113,10 +116,10 @@ private:
 			}
 			else
 			{
-				moves.reserve(moves_in_cache->size());
-				for (auto it {moves_in_cache->crbegin()}; moves_in_cache->crend() != it; ++it)
+				// moves.reserve(moves_in_cache->size());
+				for (auto it {moves_in_cache->rbegin()}; moves_in_cache->rend() != it; --it)
 				{
-					moves.emplace_back(it->card(), it->suit(), max_tricks - it->tricks());
+					moves.push_back(move_type {it->card(), it->suit(), max_tricks - it->tricks()});
 				}
 			}
 		}
@@ -127,7 +130,7 @@ private:
 		}
 		else
 		{
-			moves = t.available_moves();
+			t.get_available_moves(moves);
 			assert(!moves.empty());
 
 			for (std::size_t i = 0; i < moves.size(); ++i)
@@ -198,25 +201,16 @@ private:
 				}
 				else
 				{
-					moves_in_cache->reserve(moves.size());
-					for (auto it {moves.crbegin()}; moves.crend() != it; ++it)
+					//					moves_in_cache->reserve(moves.size());
+					for (auto it {moves.rbegin()}; moves.rend() != it; --it)
 					{
-						moves_in_cache->emplace_back(it->card(), it->suit(), max_tricks - it->tricks());
+						moves_in_cache->push_back(move_type {it->card(), it->suit(), max_tricks - it->tricks()});
 					}
 				}
 			}
 		}
 
-		if (is_ns)
-		{
-			assert(!moves.back().is_max());
-			return moves.back();
-		}
-		else
-		{
-			assert(!moves.front().is_max());
-			return moves.front();
-		}
+		return is_ns ? moves.back() :moves.front();
 	}
 
 	uint8_t process_table_internal(table_type& table)

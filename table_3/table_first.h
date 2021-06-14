@@ -14,6 +14,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "enums.hpp"
+#include "moves.hpp"
 
 namespace first
 {
@@ -244,7 +245,17 @@ public:
 		return suites_[m.suit()].append(m.card());
 	}
 
+	inline bool append(const ::move_t& m) noexcept
+	{
+		return suites_[m.suit()].append(m.card());
+	}
+
 	inline void remove(const move_t& m) noexcept
+	{
+		suites_[m.suit()].remove(m.card());
+	}
+
+	inline void remove(const ::move_t& m) noexcept
 	{
 		suites_[m.suit()].remove(m.card());
 	}
@@ -263,6 +274,12 @@ public:
 	}
 
 	inline bool is_move_valid(suit_t start_suit, const move_t& m) const noexcept
+	{
+		return (suites_[m.suit()].contains(m.card())
+				&& ((m.suit() == start_suit) || suites_[start_suit].empty()));
+	}
+
+	inline bool is_move_valid(suit_t start_suit, const ::move_t& m) const noexcept
 	{
 		return (suites_[m.suit()].contains(m.card())
 				&& ((m.suit() == start_suit) || suites_[start_suit].empty()));
@@ -297,11 +314,15 @@ class table_t
 {
 public:
 	using hash_type = std::array<uint8_t, sizeof(uint64_t) * 4>;
-	using move_type = move_ex_t;
-	using moves_type = std::vector<move_ex_t>;
+	using move_type = ::move_t;
+	using moves_type = ::moves_t;
 
 public:
-	table_t() = default;
+	inline table_t()
+	{
+		moves_.clear();
+	};
+
 	~table_t() = default;
 
 	table_t(const table_t&) = default;
@@ -314,9 +335,10 @@ public:
 		, trump_ {n["T"].as<std::string>().c_str(), true}
 		, turn_starter_ {n["TS"].as<std::string>().c_str()}
 	{
+		moves_.clear();
 		for (const auto& m : n["M"])
 		{
-			moves_.emplace_back(m);
+			moves_.push_back(move_type {m.as<std::string>().c_str()});
 		}
 	}
 
@@ -330,8 +352,10 @@ public:
 																		 : moves_.front().suit());
 	}
 
+	void get_available_moves(moves_type& moves) const;
+
 	// Returns winner side, if turn is finished,.and turn starter otherwise.
-	side_t make_move(const move_t& m);
+	side_t make_move(const ::move_t& m);
 
 	inline side_t current_player() const noexcept
 	{
@@ -406,25 +430,38 @@ private:
 	std::array<hand_t, 4> hands_;
 	suit_t trump_;
 	side_t turn_starter_;
-	std::vector<move_t> moves_;
+	moves_type moves_;
 };
+
+} // namespace first
 
 template <typename T, typename... Types>
 using is_one_of = std::disjunction<std::is_same<T, Types>...>;
 
 template <typename T>
-inline std::enable_if_t<is_one_of<T, cards_t, suit_t, side_t, move_t, move_ex_t>::value, std::ostream&>
+inline std::enable_if_t<is_one_of<T,
+								  suit_t,
+								  side_t,
+								  move_t,
+								  first::cards_t,
+								  first::move_t,
+								  first::move_ex_t>::value,
+						std::ostream&>
 operator<<(std::ostream& os, const T& c)
 {
 	os << c.to_string();
 	return os;
 }
 
-inline std::ostream&
-operator<<(std::ostream& os, const std::vector<move_ex_t>& moves)
+template <typename T>
+inline std::enable_if_t<is_one_of<T,
+								  moves_t,
+								  std::vector<first::move_ex_t>>::value,
+						std::ostream&>
+operator<<(std::ostream& os, const T& values)
 {
 	bool first {true};
-	for (const auto& m : moves)
+	for (const auto& m : values)
 	{
 		if (!first)
 		{
@@ -435,6 +472,5 @@ operator<<(std::ostream& os, const std::vector<move_ex_t>& moves)
 	}
 	return os;
 }
-} // namespace first
 
 #endif // TABLE_H
