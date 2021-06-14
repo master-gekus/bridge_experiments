@@ -73,35 +73,31 @@ std::size_t cards_t::size() const noexcept
 	return res;
 }
 
-void cards_t::get_moves(std::vector<move_ex_t>& res, const suit_t& suit) const
+void cards_t::get_available_moves(moves_t& moves, const suit_t& suit) const
 {
 	for (const auto& c : card_t::all())
 	{
 		if (0 != (cards_ & c))
 		{
-			res.emplace_back(c, suit);
+			moves.push_back(::move_t {c, suit, 0});
 		}
 	}
 }
 
-std::vector<move_ex_t> hand_t::available_moves(const suit_t& suit) const
+void hand_t::get_available_moves(moves_t& moves, const suit_t& suit) const
 {
-	std::vector<move_ex_t> res;
-	res.reserve(13);
-
+	moves.clear();
 	if ((suit_t::NoTrump != suit) && (!suites_[suit].empty()))
 	{
-		suites_[suit].get_moves(res, suit);
+		suites_[suit].get_available_moves(moves, suit);
 	}
 	else
 	{
 		for (std::size_t i = 0; i < suites_.size(); ++i)
 		{
-			suites_[i].get_moves(res, suit_t {i});
+			suites_[i].get_available_moves(moves, suit_t {i});
 		}
 	}
-
-	return res;
 }
 
 void hand_t::dump(std::ostream& os) const
@@ -110,12 +106,6 @@ void hand_t::dump(std::ostream& os) const
 	{
 		os << std::setw(12) << suit_t {i} << " : " << suites_[i] << std::endl;
 	}
-}
-
-move_t::move_t(const char* str)
-{
-	card_ = card_t::next_card_from_string(str);
-	suit_ = suit_t {str};
 }
 
 void table_t::dump(std::ostream& os) const
@@ -145,7 +135,9 @@ void table_t::dump(std::ostream& os) const
 		std::cout << "  Next player     : " << turn_starter_ + moves_.size() << std::endl;
 
 		std::cout << "  Available moves : ";
-		for (const auto& m : available_moves())
+		moves_type am;
+		get_available_moves(am);
+		for (const auto& m : am)
 		{
 			std::cout << m << " ";
 		}
@@ -201,12 +193,8 @@ bool table_t::is_valid() const noexcept
 
 void table_t::get_available_moves(moves_type& moves) const
 {
-	moves.clear();
-
-	for (const auto m : available_moves())
-	{
-		moves.push_back(move_type {m.card(), m.suit(), m.tricks()});
-	}
+	hands_[turn_starter_ + moves_.size()].get_available_moves(moves,
+															  moves_.empty() ? suit_t::NoTrump : moves_.front().suit());
 }
 
 side_t table_t::make_move(const ::move_t& m)

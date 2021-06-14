@@ -9,7 +9,6 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 #include <yaml-cpp/yaml.h>
 
@@ -18,8 +17,6 @@
 
 namespace first
 {
-
-class move_ex_t;
 
 class cards_t
 {
@@ -89,125 +86,10 @@ public:
 	std::string to_string() const;
 	bool append(card_t c) noexcept;
 	std::size_t size() const noexcept;
-	void get_moves(std::vector<move_ex_t>& res, const suit_t& suit) const;
+	void get_available_moves(moves_t& moves, const suit_t& suit) const;
 
 private:
 	underlying_type cards_;
-};
-
-class move_t
-{
-public:
-	move_t() = default;
-	~move_t() = default;
-
-	move_t(const move_t&) = default;
-	move_t(move_t&&) = default;
-	move_t& operator=(const move_t&) = default;
-	move_t& operator=(move_t&&) = default;
-
-	inline move_t(const card_t& c, const suit_t& s)
-		: card_ {c}
-		, suit_ {s}
-	{
-	}
-
-	explicit move_t(const char* str);
-	inline explicit move_t(const YAML::Node& n)
-		: move_t {n.as<std::string>().c_str()}
-	{
-	}
-
-public:
-	inline const card_t& card() const noexcept
-	{
-		return card_;
-	}
-
-	inline const suit_t& suit() const noexcept
-	{
-		return suit_;
-	}
-
-	inline std::string to_string() const
-	{
-		return std::string {card_.to_string()} + suit_.to_string_short();
-	}
-
-	inline bool constexpr is_beat(const move_t& m, const suit_t& trump) const noexcept
-	{
-		return (m.suit_ == suit_) ? (card_ > m.card_) : (trump == suit_);
-	}
-
-	inline bool constexpr is_neighbor(const move_t& other) const noexcept
-	{
-		return (suit_ == other.suit_) && card_.is_neighbors(other.card_);
-	}
-
-private:
-	card_t card_;
-	suit_t suit_;
-};
-
-class move_ex_t : public move_t
-{
-public:
-	move_ex_t()
-		: tricks_ {0}
-	{
-	}
-	move_ex_t(const card_t& c, const suit_t& s)
-		: move_t {c, s}
-		, tricks_ {0}
-	{
-	}
-
-	template <typename T, typename = std::enable_if<std::is_integral_v<T>>>
-	move_ex_t(const card_t& c, const suit_t& s, T t)
-		: move_t {c, s}
-		, tricks_ {static_cast<uint8_t>(t)}
-	{
-	}
-
-	~move_ex_t() = default;
-
-	move_ex_t(const move_ex_t&) = default;
-	move_ex_t(move_ex_t&&) = default;
-	move_ex_t& operator=(const move_ex_t&) = default;
-	move_ex_t& operator=(move_ex_t&&) = default;
-
-	inline bool operator<(const move_ex_t& other) const noexcept
-	{
-		return tricks_ < other.tricks_;
-	}
-
-public:
-	inline uint8_t tricks() const noexcept
-	{
-		return tricks_;
-	}
-
-	template <typename T>
-	inline std::enable_if_t<std::is_integral_v<T>>
-	add_tricks(T tricks_to_add) noexcept
-	{
-		tricks_ += static_cast<uint8_t>(tricks_to_add);
-	}
-
-	template <typename T>
-	inline std::enable_if_t<std::is_integral_v<T>>
-	set_tricks(T new_tricks) noexcept
-	{
-		tricks_ = static_cast<uint8_t>(new_tricks);
-	}
-
-	inline bool is_max() const noexcept
-	{
-		return (std::numeric_limits<decltype(tricks_)>::max() == tricks_);
-	}
-
-private:
-	uint8_t tricks_;
 };
 
 class hand_t
@@ -245,17 +127,7 @@ public:
 		return suites_[m.suit()].append(m.card());
 	}
 
-	inline bool append(const ::move_t& m) noexcept
-	{
-		return suites_[m.suit()].append(m.card());
-	}
-
 	inline void remove(const move_t& m) noexcept
-	{
-		suites_[m.suit()].remove(m.card());
-	}
-
-	inline void remove(const ::move_t& m) noexcept
 	{
 		suites_[m.suit()].remove(m.card());
 	}
@@ -279,18 +151,12 @@ public:
 				&& ((m.suit() == start_suit) || suites_[start_suit].empty()));
 	}
 
-	inline bool is_move_valid(suit_t start_suit, const ::move_t& m) const noexcept
-	{
-		return (suites_[m.suit()].contains(m.card())
-				&& ((m.suit() == start_suit) || suites_[start_suit].empty()));
-	}
-
 	inline std::size_t size() const
 	{
 		return suites_[0].size() + suites_[1].size() + suites_[2].size() + suites_[3].size();
 	}
 
-	std::vector<move_ex_t> available_moves(const suit_t& suit) const;
+	void get_available_moves(moves_t& moves, const suit_t& suit) const;
 	void dump(std::ostream& os = std::cout) const;
 
 	inline bool operator<(const hand_t& other) const
@@ -345,13 +211,6 @@ public:
 public:
 	void dump(std::ostream& os = std::cout) const;
 	bool is_valid() const noexcept;
-	inline std::vector<move_ex_t> available_moves() const
-	{
-		return hands_[turn_starter_ + moves_.size()].available_moves(moves_.empty()
-																		 ? suit_t::NoTrump
-																		 : moves_.front().suit());
-	}
-
 	void get_available_moves(moves_type& moves) const;
 
 	// Returns winner side, if turn is finished,.and turn starter otherwise.
@@ -443,9 +302,7 @@ inline std::enable_if_t<is_one_of<T,
 								  suit_t,
 								  side_t,
 								  move_t,
-								  first::cards_t,
-								  first::move_t,
-								  first::move_ex_t>::value,
+								  first::cards_t>::value,
 						std::ostream&>
 operator<<(std::ostream& os, const T& c)
 {
@@ -454,9 +311,7 @@ operator<<(std::ostream& os, const T& c)
 }
 
 template <typename T>
-inline std::enable_if_t<is_one_of<T,
-								  moves_t,
-								  std::vector<first::move_ex_t>>::value,
+inline std::enable_if_t<is_one_of<T, moves_t>::value,
 						std::ostream&>
 operator<<(std::ostream& os, const T& values)
 {
