@@ -2,8 +2,8 @@
 #define TABLE_H
 
 #include <cstdint>
+#include <cstring>
 
-#include <array>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -173,13 +173,28 @@ public:
 	}
 
 private:
-	std::array<cards_t, 4> suites_;
+	cards_t suites_[4];
 };
 
 class table_t
 {
 public:
-	using hash_type = std::array<uint8_t, sizeof(uint64_t) * 4>;
+	struct hash_type
+	{
+		inline uint8_t& operator[](std::size_t index) noexcept
+		{
+			return data_[index];
+		}
+
+		inline bool operator<(const hash_type& other) const noexcept
+		{
+			return (0 > std::memcmp(data_, other.data_, sizeof (data_)));
+		}
+
+	private:
+		uint8_t data_[sizeof(uint64_t) * 4];
+	};
+
 	using move_type = ::move_t;
 	using moves_type = ::moves_t;
 
@@ -274,19 +289,17 @@ public:
 		return hands_ < other.hands_;
 	}
 
-	inline hash_type hash() const noexcept
+	inline void get_hash(hash_type& res) const noexcept
 	{
-		hash_type res;
 		auto ts {turn_starter_};
 		hands_[ts++].get_hash(&res[8 * 0]);
 		hands_[ts++].get_hash(&res[8 * 1]);
 		hands_[ts++].get_hash(&res[8 * 2]);
 		hands_[ts++].get_hash(&res[8 * 3]);
-		return res;
 	}
 
 private:
-	std::array<hand_t, 4> hands_;
+	hand_t hands_[4];
 	suit_t trump_;
 	side_t turn_starter_;
 	moves_type moves_;

@@ -107,8 +107,10 @@ private:
 
 		if (use_cache)
 		{
-			tc_[t.hash()].try_emplace(t.trump(), moves);
-			moves_in_cache = &(tc_[t.hash()][t.trump()]);
+			typename table_type::hash_type hash;
+			t.get_hash(hash);
+			tc_[hash].try_emplace(t.trump(), moves);
+			moves_in_cache = &(tc_[hash][t.trump()]);
 
 			if (is_ns)
 			{

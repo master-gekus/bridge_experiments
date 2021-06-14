@@ -1,6 +1,7 @@
 #include "table_first.h"
 
 #include <cctype>
+#include <cstring>
 
 #include <iomanip>
 #include <stdexcept>
@@ -93,7 +94,7 @@ void hand_t::get_available_moves(moves_t& moves, const suit_t& suit) const
 	}
 	else
 	{
-		for (std::size_t i = 0; i < suites_.size(); ++i)
+		for (std::size_t i = 0; i < (sizeof(suites_) / sizeof (suites_[0])); ++i)
 		{
 			suites_[i].get_available_moves(moves, suit_t {i});
 		}
@@ -102,7 +103,7 @@ void hand_t::get_available_moves(moves_t& moves, const suit_t& suit) const
 
 void hand_t::dump(std::ostream& os) const
 {
-	for (std::size_t i = 0; i < suites_.size(); ++i)
+	for (std::size_t i = 0; i < (sizeof(suites_) / sizeof (suites_[0])); ++i)
 	{
 		os << std::setw(12) << suit_t {i} << " : " << suites_[i] << std::endl;
 	}
@@ -110,7 +111,7 @@ void hand_t::dump(std::ostream& os) const
 
 void table_t::dump(std::ostream& os) const
 {
-	for (std::size_t i = 0; i < hands_.size(); ++i)
+	for (std::size_t i = 0; i < (sizeof(hands_) / sizeof (hands_[0])); ++i)
 	{
 		std::cout << "  " << side_t {i} << ":" << std::endl;
 		hands_[i].dump(os);
@@ -147,7 +148,8 @@ void table_t::dump(std::ostream& os) const
 
 bool table_t::is_valid() const noexcept
 {
-	std::array<hand_t, 4> hands {hands_};
+	decltype (hands_) hands;
+	memcpy(hands, hands_, sizeof(hands_));
 
 	if (!moves_.empty())
 	{
