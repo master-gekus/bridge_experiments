@@ -25,9 +25,10 @@ void table_processor_base::out_calculating_fineshed(std::chrono::microseconds::r
 	if (!m_suppress_output)
 	{
 		double ips {static_cast<double>(iterations()) / static_cast<double>(microseconds_passed)};
-		std::cout << "took " << (microseconds_passed / 1000) << " milliseconds ("
-				  << m_iterations << " iteration(s), "
-				  << m_reused << " reused; "
+		std::cout << "took " << (microseconds_passed / 1000) << " ms. ("
+				  << m_iterations << " it; "
+				  << m_simplified << " simp; "
+				  << m_skipped << " sk; "
 				  << ips << " Mips)" << std::endl;
 	}
 }

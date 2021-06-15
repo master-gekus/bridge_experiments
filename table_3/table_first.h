@@ -220,6 +220,11 @@ public:
 	// Returns winner side, if turn is finished,.and turn starter otherwise.
 	side_t make_move(const ::move_t& m);
 
+	uint64_t simplify()
+	{
+		return 0;
+	}
+
 	inline side_t current_player() const noexcept
 	{
 		return current_player_;

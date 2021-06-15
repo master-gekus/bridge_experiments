@@ -5,8 +5,8 @@
 
 #include <algorithm>
 #include <chrono>
-#include <string>
 #include <map>
+#include <string>
 
 #include "enums.hpp"
 
@@ -40,6 +40,26 @@ public:
 		return m_reused;
 	}
 
+	inline auto skipped() const noexcept
+	{
+		return m_skipped;
+	}
+
+	inline auto& skipped() noexcept
+	{
+		return m_skipped;
+	}
+
+	inline auto simplified() const noexcept
+	{
+		return m_simplified;
+	}
+
+	inline auto& simplified() noexcept
+	{
+		return m_simplified;
+	}
+
 	inline void restart_processing(const std::string& message) noexcept
 	{
 		m_iterations = 0;
@@ -62,6 +82,8 @@ private:
 	bool m_suppress_output {false};
 	uint64_t m_iterations {0};
 	uint64_t m_reused {0};
+	uint64_t m_skipped {0};
+	uint64_t m_simplified {0};
 };
 
 template <typename TableType, typename CacheType>
@@ -82,8 +104,7 @@ public:
 	}
 
 private:
-	inline move_type process_table_internal(std::size_t indent, const table_type& t,
-											std::size_t max_ns_found, std::size_t max_ew_found)
+	inline move_type process_table_internal(table_type& t, std::size_t max_ns_found, std::size_t max_ew_found)
 	{
 		assert(!t.empty());
 
@@ -93,9 +114,14 @@ private:
 		}
 
 		const bool is_last_move {t.is_last_move()};
-		const side_t current_player {t.current_player()};
-		const bool is_ns {current_player.is_ns()};
+		const bool is_ns {t.current_player().is_ns()};
 		const std::size_t max_tricks {t.max_tricks()};
+
+		uint64_t simplify_mask {0};
+		if (t.is_first_move() && (0 != (simplify_mask = t.simplify())))
+		{
+			++simplified();
+		}
 
 		moves_type moves {};
 		auto cache_entry {tc_.get_entry(moves, t)};
@@ -117,12 +143,12 @@ private:
 				auto& m {moves[i]};
 				if ((0 < i) && m.is_neighbor(moves[i - 1]))
 				{
-					m.add_tricks(moves[i - 1].tricks());
+					m.set_tricks(moves[i - 1].tricks());
+					++skipped();
 					continue;
 				}
 
 				table_type nt {t};
-
 				side_t winer {nt.make_move(m)};
 
 				if (is_last_move)
@@ -151,7 +177,7 @@ private:
 
 				if (!nt.empty())
 				{
-					m.add_tricks(process_table_internal(indent + 2, nt, max_ns_found, max_ew_found).tricks());
+					m.add_tricks(process_table_internal(nt, max_ns_found, max_ew_found).tricks());
 					if (is_last_move)
 					{
 						if (is_ns)
@@ -180,7 +206,7 @@ private:
 						   + ", " + table.trump().to_string() + "]");
 
 		auto start {std::chrono::steady_clock::now()};
-		auto res {process_table_internal(0, table, 0, 0)};
+		auto res {process_table_internal(table, 0, 0)};
 		out_calculating_fineshed(std::chrono::steady_clock::now() - start);
 
 		return res.tricks();
