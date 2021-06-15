@@ -226,6 +226,8 @@ side_t table_t::make_move(const ::move_t& m)
 		moves_.clear();
 	}
 
+	update_table();
+
 	return turn_starter_;
 }
 

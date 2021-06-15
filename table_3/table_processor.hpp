@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <chrono>
 #include <map>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 #include "enums.hpp"
 #include "table_cache_unordered_map.hpp"
@@ -99,8 +99,7 @@ private:
 		const bool is_last_move {t.is_last_move()};
 		const side_t current_player {t.current_player()};
 		const bool is_ns {current_player.is_ns()};
-		const std::size_t max_tricks {t.hand(current_player).size()};
-		const bool use_cache {(2 < max_tricks) && t.is_first_move()};
+		const std::size_t max_tricks {t.max_tricks()};
 
 		moves_type moves {};
 		auto cache_entry {tc_.get_entry(moves, t)};
@@ -176,7 +175,7 @@ private:
 			cache_entry.update(moves);
 		}
 
-		return is_ns ? moves.back() :moves.front();
+		return is_ns ? moves.back() : moves.front();
 	}
 
 	uint8_t process_table_internal(table_type& table)

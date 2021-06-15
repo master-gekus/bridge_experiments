@@ -78,9 +78,9 @@ public:
 		moves.clear();
 
 		const auto current_player {table.current_player()};
-		const auto max_tricks {table.hand(current_player).size()};
+		const auto max_tricks {table.max_tricks()};
 
-		if ((3 > max_tricks) || (!table.is_first_move()))
+		if ((2 > max_tricks) || (!table.is_first_move()))
 		{
 			return entry_type {};
 		}

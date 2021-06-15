@@ -189,6 +189,7 @@ public:
 	inline table_t()
 	{
 		moves_.clear();
+		update_table();
 	};
 
 	~table_t() = default;
@@ -208,6 +209,7 @@ public:
 		{
 			moves_.push_back(move_type {m.as<std::string>().c_str()});
 		}
+		update_table();
 	}
 
 public:
@@ -220,7 +222,22 @@ public:
 
 	inline side_t current_player() const noexcept
 	{
-		return turn_starter_ + moves_.size();
+		return current_player_;
+	}
+
+	inline bool is_last_move() const noexcept
+	{
+		return is_last_move_;
+	}
+
+	inline bool is_first_move() const noexcept
+	{
+		return is_first_move_;
+	}
+
+	inline std::size_t max_tricks() const noexcept
+	{
+		return max_tricks_;
 	}
 
 	inline const suit_t& trump() const noexcept
@@ -231,11 +248,13 @@ public:
 	inline void set_starter(const side_t& s) noexcept
 	{
 		turn_starter_ = s;
+		update_table();
 	}
 
 	inline void set_trump(const suit_t& t) noexcept
 	{
 		trump_ = t;
+		update_table();
 	}
 
 	inline bool empty() const noexcept
@@ -244,16 +263,6 @@ public:
 			&& hands_[1].empty()
 			&& hands_[2].empty()
 			&& hands_[3].empty();
-	}
-
-	inline bool is_last_move() const noexcept
-	{
-		return (3 == moves_.size());
-	}
-
-	inline bool is_first_move() const noexcept
-	{
-		return moves_.empty();
 	}
 
 	inline const hand_t& hand(const side_t& s) const noexcept
@@ -286,10 +295,24 @@ public:
 	}
 
 private:
+	inline void update_table() noexcept
+	{
+		current_player_ = turn_starter_ + moves_.size();
+		is_last_move_ = (3 == moves_.size());
+		is_first_move_ = moves_.empty();
+		max_tricks_ = hand(current_player_).size();
+	}
+
+private:
 	hand_t hands_[4];
 	suit_t trump_;
 	side_t turn_starter_;
 	moves_type moves_;
+
+	side_t current_player_;
+	bool is_last_move_;
+	bool is_first_move_;
+	std::size_t max_tricks_;
 };
 
 } // namespace first
