@@ -64,6 +64,8 @@ public:
 	{
 		m_iterations = 0;
 		m_reused = 0;
+		m_skipped = 0;
+		m_simplified = 0;
 		out_calculating_started(message);
 	}
 

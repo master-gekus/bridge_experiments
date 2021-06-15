@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <cstring>
 
-#include <iostream>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <string>
 #include <type_traits>
@@ -85,6 +85,11 @@ public:
 		*static_cast<underlying_type*>(buffer) = cards_;
 	}
 
+	inline operator underlying_type&()
+	{
+		return cards_;
+	}
+
 	std::string to_string() const;
 	bool append(card_t c) noexcept;
 	std::size_t size() const noexcept;
@@ -116,6 +121,11 @@ public:
 	}
 
 public:
+	inline cards_t& suit(suit_t s) noexcept
+	{
+		return suites_[s];
+	}
+
 	inline bool empty() const noexcept
 	{
 		return suites_[0].empty()
@@ -222,7 +232,28 @@ public:
 
 	uint64_t simplify()
 	{
-		return 0;
+		uint64_t mask {0};
+		mask |= simplify_suit(hands_[side_t::North].suit(suit_t::Clubs),
+							  hands_[side_t::North].suit(suit_t::Diamonds),
+							  hands_[side_t::North].suit(suit_t::Hearts),
+							  hands_[side_t::North].suit(suit_t::Spades))
+			<< 0;
+		mask |= simplify_suit(hands_[side_t::East].suit(suit_t::Clubs),
+							  hands_[side_t::East].suit(suit_t::Diamonds),
+							  hands_[side_t::East].suit(suit_t::Hearts),
+							  hands_[side_t::East].suit(suit_t::Spades))
+			<< 16;
+		mask |= simplify_suit(hands_[side_t::South].suit(suit_t::Clubs),
+							  hands_[side_t::South].suit(suit_t::Diamonds),
+							  hands_[side_t::South].suit(suit_t::Hearts),
+							  hands_[side_t::South].suit(suit_t::Spades))
+			<< 32;
+		mask |= simplify_suit(hands_[side_t::West].suit(suit_t::Clubs),
+							  hands_[side_t::West].suit(suit_t::Diamonds),
+							  hands_[side_t::West].suit(suit_t::Hearts),
+							  hands_[side_t::West].suit(suit_t::Spades))
+			<< 48;
+		return mask;
 	}
 
 	inline side_t current_player() const noexcept
@@ -306,6 +337,16 @@ private:
 		is_last_move_ = (3 == moves_.size());
 		is_first_move_ = moves_.empty();
 		max_tricks_ = hand(current_player_).size();
+	}
+
+	static uint64_t simplify_suit(uint16_t& c1, uint16_t& c2, uint16_t& c3, uint16_t& c4)
+	{
+		uint16_t mask = ~(c1 | c2 | c3 | c4);
+		for (uint16_t sm = 0; (0 != sm) && (0 != (sm & mask)); sm >>= 1)
+		{
+			mask &= ~sm;
+		}
+		return static_cast<uint64_t>(mask);
 	}
 
 private:
