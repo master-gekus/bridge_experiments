@@ -1,0 +1,64 @@
+- Name: "Table #1"
+  N:
+    C: 9A
+    D: K84
+    H: 547
+    S: 3A
+  E:
+    C: 53
+    D: AQ2
+    H: 2A
+    S: 82K
+  S:
+    C: J82
+    D: 5J3
+    H: 96
+    S: 5Q
+  W:
+    C: 106
+    D: 710
+    H: 8310
+    S: 9J10
+
+  # Trump (козырь)
+  T: NT
+
+  # Turn Starter (кто сделал первых ход)
+  TS: E
+
+  # Moves (уже сделанные ходы (массив строк))
+  M: []
+
+# Result of calculating this table
+#Calculating for [North, Clubs]    : took 193485 milliseconds (293257349 iteration(s), 114851016 reused; 1.51566 Mips)
+#Calculating for [North, Diamonds] : took 291393 milliseconds (291624113 iteration(s), 115473506 reused; 1.00079 Mips)
+#Calculating for [North, Hearts]   : took 353658 milliseconds (291422520 iteration(s), 114596594 reused; 0.824022 Mips)
+#Calculating for [North, Spades]   : took 380904 milliseconds (293175770 iteration(s), 114997793 reused; 0.769682 Mips)
+#Calculating for [North, No Trump] : took 397649 milliseconds (294611914 iteration(s), 114691551 reused; 0.740883 Mips)
+#Calculating for [East, Clubs]     : took 0 milliseconds (191 iteration(s), 114 reused; 0.201264 Mips)
+#Calculating for [East, Diamonds]  : took 0 milliseconds (191 iteration(s), 114 reused; 2.61644 Mips)
+#Calculating for [East, Hearts]    : took 0 milliseconds (191 iteration(s), 114 reused; 2.61644 Mips)
+#Calculating for [East, Spades]    : took 0 milliseconds (191 iteration(s), 114 reused; 5.78788 Mips)
+#Calculating for [East, No Trump]  : took 0 milliseconds (191 iteration(s), 114 reused; 2.76812 Mips)
+#Calculating for [South, Clubs]    : took 0 milliseconds (185 iteration(s), 114 reused; 1.2585 Mips)
+#Calculating for [South, Diamonds] : took 0 milliseconds (185 iteration(s), 114 reused; 2.64286 Mips)
+#Calculating for [South, Hearts]   : took 0 milliseconds (185 iteration(s), 114 reused; 3.13559 Mips)
+#Calculating for [South, Spades]   : took 0 milliseconds (185 iteration(s), 114 reused; 1.33094 Mips)
+#Calculating for [South, No Trump] : took 0 milliseconds (185 iteration(s), 114 reused; 2.4026 Mips)
+#Calculating for [West, Clubs]     : took 0 milliseconds (206 iteration(s), 114 reused; 1.52593 Mips)
+#Calculating for [West, Diamonds]  : took 0 milliseconds (206 iteration(s), 114 reused; 4.47826 Mips)
+#Calculating for [West, Hearts]    : took 0 milliseconds (206 iteration(s), 114 reused; 4.47826 Mips)
+#Calculating for [West, Spades]    : took 0 milliseconds (206 iteration(s), 114 reused; 5.42105 Mips)
+#Calculating for [West, No Trump]  : took 0 milliseconds (206 iteration(s), 114 reused; 4.57778 Mips)
+#Total took 1617105 milliseconds (1464094576 iteration(s); 0.90538 Mips); 8656874 table(s) saved 
+#                 Clubs  Diamonds    Hearts    Spades  No Trump
+#     North :         4         5         4         3         4
+#      East :         5         5         4         4         4
+#     South :         4         5         4         3         4
+#      West :         5         5         4         4         4
+
+  Result:
+    N: [4,5,4,3,4]
+    E: [5,5,4,4,4]
+    S: [4,5,4,3,4]
+    W: [5,5,4,4,4]
