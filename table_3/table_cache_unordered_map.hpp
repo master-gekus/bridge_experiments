@@ -2,14 +2,13 @@
 #define TABLE_CACHE_UNORDERED_MAP_HPP
 
 #include <cstdint>
+#include <cstring>
 
 #include <map>
 #include <unordered_map>
 
 #include "moves.hpp"
 #include "table_hash.hpp"
-
-#include "table_first.h"
 
 class table_cache_unordered_map
 {
@@ -73,7 +72,8 @@ public:
 		return cache_.size();
 	}
 
-	entry_type get_entry(moves_t& moves, const first::table_t& table)
+	template<typename TableType>
+	entry_type get_entry(moves_t& moves, const TableType& table)
 	{
 		moves.clear();
 
@@ -85,13 +85,17 @@ public:
 			return entry_type {};
 		}
 
-		using table_type = first::table_t;
-		typename table_type::hash_type hash;
+		typename TableType::hash_type hash;
 		table.get_hash(hash);
 
 		const auto trump {table.trump()};
-		cache_[hash].try_emplace(trump, moves);
-		moves_t* entry {&(cache_[hash][trump])};
+
+		auto res {cache_.try_emplace(hash)};
+		if (res.second)
+		{
+			res.first->second.clear();
+		}
+		moves_t* entry {&(res.first->second.moves_[trump])};
 
 		const bool reverse {current_player.is_ns()};
 
@@ -111,7 +115,17 @@ public:
 	}
 
 private:
-	std::unordered_map<table_hash, std::map<suit_t, moves_t>> cache_;
+	struct moves_block
+	{
+		moves_t moves_[5];
+		inline void clear() noexcept
+		{
+			std::memset(moves_, 0, sizeof(moves_));
+		}
+	};
+
+private:
+	std::unordered_map<table_hash, moves_block> cache_;
 };
 
 static_assert(std::is_trivially_copyable_v<table_cache_unordered_map::entry_type>);
