@@ -3,6 +3,7 @@
 #include <cctype> // std::toupper
 
 #include <stdexcept>
+#include <string>
 
 /* ********************************************************************************************
  * card_t

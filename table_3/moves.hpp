@@ -50,7 +50,7 @@ public:
 									   : cards_[suit_t::Spades];
 	}
 
-	inline bool operator<(const move_t& other)
+	inline bool operator<(const move_t& other) const noexcept
 	{
 		return tricks_ < other.tricks_;
 	}
