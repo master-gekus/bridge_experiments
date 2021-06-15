@@ -10,6 +10,7 @@
 #include <string>
 
 #include "enums.hpp"
+#include "table_cache_unordered_map.hpp"
 
 class table_processor_base
 {
@@ -75,7 +76,7 @@ public:
 	using result_type = std::map<side_t, std::map<suit_t, uint8_t>>;
 
 	// temporary!!!
-	using table_cache_type = std::unordered_map<typename table_type::hash_type, std::map<suit_t, moves_type>>;
+	using table_cache_type = table_cache_unordered_map;
 
 public:
 	inline table_processor(table_cache_type& tc, bool suppress_output = false) noexcept
@@ -102,30 +103,7 @@ private:
 		const bool use_cache {(2 < max_tricks) && t.is_first_move()};
 
 		moves_type moves {};
-		moves.clear();
-
-		moves_type* moves_in_cache {nullptr};
-
-		if (use_cache)
-		{
-			typename table_type::hash_type hash;
-			t.get_hash(hash);
-			tc_[hash].try_emplace(t.trump(), moves);
-			moves_in_cache = &(tc_[hash][t.trump()]);
-
-			if (is_ns)
-			{
-				moves = (*moves_in_cache);
-			}
-			else
-			{
-				// moves.reserve(moves_in_cache->size());
-				for (auto it {moves_in_cache->rbegin()}; moves_in_cache->rend() != it; --it)
-				{
-					moves.push_back(move_type {it->card(), it->suit(), max_tricks - it->tricks()});
-				}
-			}
-		}
+		auto cache_entry {tc_.get_entry(moves, t)};
 
 		if (!moves.empty())
 		{
@@ -195,22 +173,7 @@ private:
 			}
 
 			std::sort(moves.begin(), moves.end());
-
-			if (nullptr != moves_in_cache)
-			{
-				if (is_ns)
-				{
-					*moves_in_cache = moves;
-				}
-				else
-				{
-					//					moves_in_cache->reserve(moves.size());
-					for (auto it {moves.rbegin()}; moves.rend() != it; --it)
-					{
-						moves_in_cache->push_back(move_type {it->card(), it->suit(), max_tricks - it->tricks()});
-					}
-				}
-			}
+			cache_entry.update(moves);
 		}
 
 		return is_ns ? moves.back() :moves.front();
