@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <unordered_map>
 #include <stdexcept>
 
 #include <yaml-cpp/yaml.h>
@@ -12,11 +13,14 @@
 #include <leveldb/db.h>
 
 #include "table_processor.hpp"
+#include "table_cache_memory.hpp"
+
 #include "table_first.h"
 
-using table_cache = typename table_processor<first::table_t>::table_cache_type;
+using table_processor_type = table_processor<first::table_t,table_cache_memory<std::unordered_map>>;
+using table_cache_type = typename table_processor_type::table_cache_type;
 
-void process_table(const YAML::Node& n, table_cache& tc)
+void process_table(const YAML::Node& n, table_cache_type& tc)
 {
 	first::table_t table {n};
 	table.dump();
@@ -25,7 +29,7 @@ void process_table(const YAML::Node& n, table_cache& tc)
 		return;
 	}
 
-	table_processor<first::table_t> tp {tc};
+	table_processor_type tp {tc};
 	auto results {tp.process_table(table)};
 
 	double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
@@ -106,7 +110,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		table_cache tc {};
+		table_cache_type tc {};
 		std::size_t index {0};
 		for (const auto& ts : YAML::LoadFile(argv[1]))
 		{

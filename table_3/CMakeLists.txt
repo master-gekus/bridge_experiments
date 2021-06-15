@@ -10,8 +10,8 @@ add_executable(${PROJECT_NAME}
 	moves.cpp
 	table_hash.hpp
 	table_hash.cpp
-	table_cache_unordered_map.hpp
-	table_cache_unordered_map.cpp
+	table_cache_memory.hpp
+	table_cache_memory.cpp
 	table_first.h
 	table_first.cpp
 	table_processor.hpp

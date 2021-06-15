@@ -1,25 +1,23 @@
-#ifndef TABLE_CACHE_UNORDERED_MAP_HPP
-#define TABLE_CACHE_UNORDERED_MAP_HPP
+#ifndef TABLE_CACHE_MEMORY_HPP
+#define TABLE_CACHE_MEMORY_HPP
 
 #include <cstdint>
 #include <cstring>
 
-#include <map>
-#include <unordered_map>
-
 #include "moves.hpp"
 #include "table_hash.hpp"
 
-class table_cache_unordered_map
+template<template<typename...> typename MapType>
+class table_cache_memory
 {
 public:
-	table_cache_unordered_map() = default;
-	~table_cache_unordered_map() = default;
+	table_cache_memory() = default;
+	~table_cache_memory() = default;
 
-	table_cache_unordered_map(const table_cache_unordered_map&) = delete;
-	table_cache_unordered_map(table_cache_unordered_map&&) = delete;
-	table_cache_unordered_map& operator=(const table_cache_unordered_map&) = delete;
-	table_cache_unordered_map& operator=(table_cache_unordered_map&&) = delete;
+	table_cache_memory(const table_cache_memory&) = delete;
+	table_cache_memory(table_cache_memory&&) = delete;
+	table_cache_memory& operator=(const table_cache_memory&) = delete;
+	table_cache_memory& operator=(table_cache_memory&&) = delete;
 
 public:
 	class entry_type
@@ -65,6 +63,8 @@ public:
 		std::size_t max_tricks_ {0};
 		bool reverse_ {false};
 	};
+
+	static_assert(std::is_trivially_copyable_v<entry_type>);
 
 public:
 	inline std::size_t size() const
@@ -125,9 +125,7 @@ private:
 	};
 
 private:
-	std::unordered_map<table_hash, moves_block> cache_;
+	MapType<table_hash, moves_block> cache_;
 };
 
-static_assert(std::is_trivially_copyable_v<table_cache_unordered_map::entry_type>);
-
-#endif // TABLE_CACHE_UNORDERED_MAP_HPP
+#endif // TABLE_CACHE_MEMORY_HPP

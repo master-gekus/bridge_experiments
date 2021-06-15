@@ -5,12 +5,10 @@
 
 #include <algorithm>
 #include <chrono>
-#include <map>
 #include <string>
-#include <unordered_map>
+#include <map>
 
 #include "enums.hpp"
-#include "table_cache_unordered_map.hpp"
 
 class table_processor_base
 {
@@ -66,7 +64,7 @@ private:
 	uint64_t m_reused {0};
 };
 
-template <typename TableType>
+template <typename TableType, typename CacheType>
 class table_processor : public table_processor_base
 {
 public:
@@ -74,9 +72,7 @@ public:
 	using move_type = typename table_type::move_type;
 	using moves_type = typename table_type::moves_type;
 	using result_type = std::map<side_t, std::map<suit_t, uint8_t>>;
-
-	// temporary!!!
-	using table_cache_type = table_cache_unordered_map;
+	using table_cache_type = CacheType;
 
 public:
 	inline table_processor(table_cache_type& tc, bool suppress_output = false) noexcept
