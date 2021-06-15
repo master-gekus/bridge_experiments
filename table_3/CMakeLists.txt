@@ -8,6 +8,8 @@ add_executable(${PROJECT_NAME}
 	enums.cpp
 	moves.hpp
 	moves.cpp
+	table_hash.hpp
+	table_hash.cpp
 	table_first.h
 	table_first.cpp
 	table_processor.hpp

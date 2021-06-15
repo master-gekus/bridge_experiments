@@ -15,6 +15,7 @@
 
 #include "enums.hpp"
 #include "moves.hpp"
+#include "table_hash.hpp"
 
 namespace first
 {
@@ -180,36 +181,9 @@ private:
 class table_t
 {
 public:
-	struct hash_type
-	{
-		inline uint8_t& operator[](std::size_t index) noexcept
-		{
-			return data_[index];
-		}
-
-		inline bool operator==(const hash_type& other) const noexcept
-		{
-			return (0 == std::memcmp(data_, other.data_, sizeof(data_)));
-		}
-
-		inline bool operator<(const hash_type& other) const noexcept
-		{
-			return (0 > std::memcmp(data_, other.data_, sizeof(data_)));
-		}
-
-		inline size_t hash() const
-		{
-			const uint64_t* d {reinterpret_cast<const uint64_t*>(data_)};
-			std::hash<uint64_t> h {};
-			return h(d[0]) ^ h(d[1]) ^ h(d[2]) ^ h(d[3]);
-		}
-
-	private:
-		uint8_t data_[sizeof(uint64_t) * 4];
-	};
-
-	using move_type = ::move_t;
-	using moves_type = ::moves_t;
+	using hash_type = table_hash;
+	using move_type = move_t;
+	using moves_type = moves_t;
 
 public:
 	inline table_t()
@@ -352,19 +326,6 @@ operator<<(std::ostream& os, const T& values)
 		std::cout << m;
 	}
 	return os;
-}
-
-namespace std
-{
-template <>
-class hash<first::table_t::hash_type>
-{
-public:
-	inline size_t operator()(const first::table_t::hash_type& h) const
-	{
-		return h.hash();
-	}
-};
 }
 
 #endif // TABLE_H
