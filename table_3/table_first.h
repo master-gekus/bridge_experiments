@@ -342,9 +342,27 @@ private:
 	static uint64_t simplify_suit(uint16_t& c1, uint16_t& c2, uint16_t& c3, uint16_t& c4)
 	{
 		uint16_t mask = ~(c1 | c2 | c3 | c4);
-		for (uint16_t sm = 0x8000; (0 != sm) && (0 != (sm & mask)); sm >>= 1)
+
+		// Drop down hi bits
+		for (uint16_t sm {0x8000}; (0 != sm) && (0 != (sm & mask)); sm >>= 1)
 		{
 			mask &= ~sm;
+		}
+
+		// Shift suits
+		for (uint16_t m {mask}, rm {0xFFFE}; m != 0; m >>= 1)
+		{
+			if (0 != (m & 1))
+			{
+				uint16_t sm = ~rm;
+				c1 = (c1 & sm) | ((c1 & rm) >> 1);
+				c2 = (c2 & sm) | ((c2 & rm) >> 1);
+				c3 = (c3 & sm) | ((c3 & rm) >> 1);
+				c4 = (c4 & sm) | ((c4 & rm) >> 1);
+			}
+			else {
+				rm <<= 1;
+			}
 		}
 		return static_cast<uint64_t>(mask);
 	}

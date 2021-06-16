@@ -89,24 +89,46 @@ void process_table(const YAML::Node& n, table_cache_type& tc)
 		return;
 	}
 
-	table_processor_type tp {tc, true};
-	auto results {tp.process_table(table)};
-
-	double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
-	std::cout << "Total took " << (tp.total_duration() / 1000) << " milliseconds ("
-			  << tp.total_iterations() << " iteration(s); "
-			  << ips << " Mips); " << tc.size() << " table(s) saved " << std::endl;
-
-	output_results(results);
-	compare_results(n, results);
-
-	uint64_t sm {table.simplify()};
-	std::cout << "Holes in table (0x" << std::setbase(16) << std::setw(16) << std::setfill('0')
-			  << sm << std::setfill(' ') << "):" << std::endl;
-	for (std::size_t i = 0; i < 4; ++i, sm >>= 16)
 	{
-		std::cout << std::setw(10) << suit_t {i}.to_string() << " : " << first::cards_t {sm} << std::endl;
+		table_processor_type tp {tc};
+		auto results {tp.process_table(table)};
+
+		double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
+		std::cout << "Total took " << (tp.total_duration() / 1000) << " milliseconds ("
+				  << tp.total_iterations() << " iteration(s); "
+				  << ips << " Mips); " << tc.size() << " table(s) saved " << std::endl;
+
+		output_results(results);
+		compare_results(n, results);
 	}
+
+	//	uint64_t sm {table.simplify()};
+	//	std::cout << "Holes in table (0x" << std::setbase(16) << std::setw(16) << std::setfill('0')
+	//			  << sm << std::setfill(' ') << std::setbase(10) << "):" << std::endl;
+	//	for (std::size_t i = 0; i < 4; ++i, sm >>= 16)
+	//	{
+	//		std::cout << std::setw(10) << suit_t {i}.to_string() << " : " << first::cards_t {sm} << std::endl;
+	//	}
+
+	//	std::cout << "After simplifying:" << std::endl;
+	//	table.dump();
+	//	if (!table.is_valid())
+	//	{
+	//		return;
+	//	}
+
+	//	{
+	//		table_processor_type tp {tc, true};
+	//		auto results {tp.process_table(table)};
+
+	//		double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
+	//		std::cout << "Total took " << (tp.total_duration() / 1000) << " milliseconds ("
+	//				  << tp.total_iterations() << " iteration(s); "
+	//				  << ips << " Mips); " << tc.size() << " table(s) saved " << std::endl;
+
+	//		output_results(results);
+	//		compare_results(n, results);
+	//	}
 }
 
 int main(int argc, char** argv)
