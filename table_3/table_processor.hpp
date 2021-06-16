@@ -119,11 +119,11 @@ private:
 		const bool is_ns {t.current_player().is_ns()};
 		const std::size_t max_tricks {t.max_tricks()};
 
-		uint64_t simplify_mask {0};
-		if (t.is_first_move() && (0 != (simplify_mask = t.simplify())))
-		{
-			++simplified();
-		}
+//		uint64_t simplify_mask {0};
+//		if (t.is_first_move() && (0 != (simplify_mask = t.simplify())))
+//		{
+//			++simplified();
+//		}
 
 		moves_type moves {};
 		auto cache_entry {tc_.get_entry(moves, t)};

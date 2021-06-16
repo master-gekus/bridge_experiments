@@ -234,23 +234,23 @@ public:
 	{
 		uint64_t mask {0};
 		mask |= simplify_suit(hands_[side_t::North].suit(suit_t::Clubs),
-							  hands_[side_t::North].suit(suit_t::Diamonds),
-							  hands_[side_t::North].suit(suit_t::Hearts),
-							  hands_[side_t::North].suit(suit_t::Spades))
+							  hands_[side_t::East].suit(suit_t::Clubs),
+							  hands_[side_t::South].suit(suit_t::Clubs),
+							  hands_[side_t::West].suit(suit_t::Clubs))
 			<< 0;
-		mask |= simplify_suit(hands_[side_t::East].suit(suit_t::Clubs),
+		mask |= simplify_suit(hands_[side_t::North].suit(suit_t::Diamonds),
 							  hands_[side_t::East].suit(suit_t::Diamonds),
-							  hands_[side_t::East].suit(suit_t::Hearts),
-							  hands_[side_t::East].suit(suit_t::Spades))
-			<< 16;
-		mask |= simplify_suit(hands_[side_t::South].suit(suit_t::Clubs),
 							  hands_[side_t::South].suit(suit_t::Diamonds),
+							  hands_[side_t::West].suit(suit_t::Diamonds))
+			<< 16;
+		mask |= simplify_suit(hands_[side_t::North].suit(suit_t::Hearts),
+							  hands_[side_t::East].suit(suit_t::Hearts),
 							  hands_[side_t::South].suit(suit_t::Hearts),
-							  hands_[side_t::South].suit(suit_t::Spades))
+							  hands_[side_t::West].suit(suit_t::Hearts))
 			<< 32;
-		mask |= simplify_suit(hands_[side_t::West].suit(suit_t::Clubs),
-							  hands_[side_t::West].suit(suit_t::Diamonds),
-							  hands_[side_t::West].suit(suit_t::Hearts),
+		mask |= simplify_suit(hands_[side_t::North].suit(suit_t::Spades),
+							  hands_[side_t::East].suit(suit_t::Spades),
+							  hands_[side_t::South].suit(suit_t::Spades),
 							  hands_[side_t::West].suit(suit_t::Spades))
 			<< 48;
 		return mask;
@@ -342,7 +342,7 @@ private:
 	static uint64_t simplify_suit(uint16_t& c1, uint16_t& c2, uint16_t& c3, uint16_t& c4)
 	{
 		uint16_t mask = ~(c1 | c2 | c3 | c4);
-		for (uint16_t sm = 0; (0 != sm) && (0 != (sm & mask)); sm >>= 1)
+		for (uint16_t sm = 0x8000; (0 != sm) && (0 != (sm & mask)); sm >>= 1)
 		{
 			mask &= ~sm;
 		}

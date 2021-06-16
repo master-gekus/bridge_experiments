@@ -5,19 +5,19 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <unordered_map>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <yaml-cpp/yaml.h>
 
 #include <leveldb/db.h>
 
-#include "table_processor.hpp"
 #include "table_cache_memory.hpp"
+#include "table_processor.hpp"
 
 #include "table_first.h"
 
-using table_processor_type = table_processor<first::table_t,table_cache_memory<std::unordered_map>>;
+using table_processor_type = table_processor<first::table_t, table_cache_memory<std::unordered_map>>;
 using table_cache_type = typename table_processor_type::cache_type;
 using table_result_type = typename table_processor_type::result_type;
 
@@ -89,7 +89,7 @@ void process_table(const YAML::Node& n, table_cache_type& tc)
 		return;
 	}
 
-	table_processor_type tp {tc};
+	table_processor_type tp {tc, true};
 	auto results {tp.process_table(table)};
 
 	double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
@@ -99,6 +99,14 @@ void process_table(const YAML::Node& n, table_cache_type& tc)
 
 	output_results(results);
 	compare_results(n, results);
+
+	uint64_t sm {table.simplify()};
+	std::cout << "Holes in table (0x" << std::setbase(16) << std::setw(16) << std::setfill('0')
+			  << sm << std::setfill(' ') << "):" << std::endl;
+	for (std::size_t i = 0; i < 4; ++i, sm >>= 16)
+	{
+		std::cout << std::setw(10) << suit_t {i}.to_string() << " : " << first::cards_t {sm} << std::endl;
+	}
 }
 
 int main(int argc, char** argv)
