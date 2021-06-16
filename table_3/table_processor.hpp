@@ -96,10 +96,10 @@ public:
 	using move_type = typename table_type::move_type;
 	using moves_type = typename table_type::moves_type;
 	using result_type = std::map<side_t, std::map<suit_t, uint8_t>>;
-	using table_cache_type = CacheType;
+	using cache_type = CacheType;
 
 public:
-	inline table_processor(table_cache_type& tc, bool suppress_output = false) noexcept
+	inline table_processor(cache_type& tc, bool suppress_output = false) noexcept
 		: table_processor_base {suppress_output}
 		, tc_ {tc}
 	{
@@ -251,7 +251,7 @@ public:
 	}
 
 private:
-	table_cache_type& tc_;
+	cache_type& tc_;
 	uint64_t total_iterations_ {0};
 	uint64_t total_duration_ {0};
 };

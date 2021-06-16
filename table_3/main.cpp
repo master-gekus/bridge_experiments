@@ -18,26 +18,11 @@
 #include "table_first.h"
 
 using table_processor_type = table_processor<first::table_t,table_cache_memory<std::unordered_map>>;
-using table_cache_type = typename table_processor_type::table_cache_type;
+using table_cache_type = typename table_processor_type::cache_type;
+using table_result_type = typename table_processor_type::result_type;
 
-void process_table(const YAML::Node& n, table_cache_type& tc)
+void output_results(table_result_type& results)
 {
-	first::table_t table {n};
-	table.dump();
-	if (!table.is_valid())
-	{
-		return;
-	}
-
-	table_processor_type tp {tc};
-	auto results {tp.process_table(table)};
-
-	double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
-	std::cout << "Total took " << (tp.total_duration() / 1000) << " milliseconds ("
-			  << tp.total_iterations() << " iteration(s); "
-			  << ips << " Mips); " << tc.size() << " table(s) saved " << std::endl;
-
-	// Output result table
 	std::cout << std::string(12, ' ');
 	for (const auto& trump : suit_t::all())
 	{
@@ -54,8 +39,10 @@ void process_table(const YAML::Node& n, table_cache_type& tc)
 		}
 		std::cout << std::endl;
 	}
+}
 
-	// Compare with stored results
+void compare_results(const YAML::Node& n, table_result_type& results)
+{
 	try
 	{
 		const auto rc {n["Result"]};
@@ -91,6 +78,27 @@ void process_table(const YAML::Node& n, table_cache_type& tc)
 	{
 		std::cout << "Results to compare not found or invalid: " << e.what() << std::endl;
 	}
+}
+
+void process_table(const YAML::Node& n, table_cache_type& tc)
+{
+	first::table_t table {n};
+	table.dump();
+	if (!table.is_valid())
+	{
+		return;
+	}
+
+	table_processor_type tp {tc};
+	auto results {tp.process_table(table)};
+
+	double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
+	std::cout << "Total took " << (tp.total_duration() / 1000) << " milliseconds ("
+			  << tp.total_iterations() << " iteration(s); "
+			  << ips << " Mips); " << tc.size() << " table(s) saved " << std::endl;
+
+	output_results(results);
+	compare_results(n, results);
 }
 
 int main(int argc, char** argv)
