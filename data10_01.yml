@@ -21,10 +21,10 @@
     S: 9J10
 
   # Trump (козырь)
-  T: NT
+  T: D
 
   # Turn Starter (кто сделал первых ход)
-  TS: E
+  TS: W
 
   # Moves (уже сделанные ходы (массив строк))
   M: []
@@ -62,3 +62,11 @@
     E: [5,5,4,4,4]
     S: [4,5,4,3,4]
     W: [5,5,4,4,4]
+
+# Simplifying: 11+
+#Calculating for [South, Diamonds] : took 86267 ms. (196283182 it; 0 simp; 14833251 sk; 2.27528 Mips)
+#NS tricks : 5
+#Moves     : 5C(5) 8C(5) 6D(5) 8D(5) 3H(5) 8H(5) 10H(5) 6S(5) 7S(5) 8S(5) 
+
+# Simplifying: 3+
+

@@ -88,7 +88,7 @@ private:
 	uint64_t m_simplified {0};
 };
 
-template <typename TableType, typename CacheType>
+template <typename TableType, typename CacheType, bool UseSimplify>
 class table_processor : public table_processor_base
 {
 public:
@@ -106,7 +106,8 @@ public:
 	}
 
 private:
-	inline move_type process_table_internal(table_type& t, std::size_t max_ns_found, std::size_t max_ew_found)
+	inline move_type process_table_internal(table_type& t, std::size_t max_ns_found, std::size_t max_ew_found,
+											moves_type* res_moves = nullptr)
 	{
 		assert(!t.empty());
 
@@ -119,10 +120,13 @@ private:
 		const bool is_ns {t.current_player().is_ns()};
 		const std::size_t max_tricks {t.max_tricks()};
 
-		uint64_t simplify_mask {0};
-		if (t.is_first_move() && (0 != (simplify_mask = t.simplify())))
+		if constexpr (UseSimplify)
 		{
-			++simplified();
+			uint64_t simplify_mask {0};
+			if ((2 < max_tricks) && t.is_first_move() && (0 != (simplify_mask = t.simplify())))
+			{
+				++simplified();
+			}
 		}
 
 		moves_type moves {};
@@ -199,23 +203,28 @@ private:
 			cache_entry.update(moves);
 		}
 
+		if (nullptr != res_moves)
+		{
+			*res_moves = moves;
+		}
+
 		return is_ns ? moves.back() : moves.front();
 	}
 
-	uint8_t process_table_internal(table_type& table)
+public:
+	uint8_t process_table(table_type& table, moves_type* res_moves = nullptr)
 	{
 		restart_processing(std::string {"["} + (table.current_player() - 1).to_string()
 						   + ", " + table.trump().to_string() + "]");
 
 		auto start {std::chrono::steady_clock::now()};
-		auto res {process_table_internal(table, 0, 0)};
+		auto res {process_table_internal(table, 0, 0, res_moves)};
 		out_calculating_fineshed(std::chrono::steady_clock::now() - start);
 
 		return res.tricks();
 	}
 
-public:
-	inline result_type process_table(table_type table)
+	inline result_type process_table_full(table_type table)
 	{
 		using namespace std::chrono;
 
@@ -230,7 +239,7 @@ public:
 			for (const auto& trump : suit_t::all())
 			{
 				table.set_trump(trump);
-				result[side][trump] = process_table_internal(table);
+				result[side][trump] = process_table(table);
 				total_iterations_ += iterations();
 			}
 		}

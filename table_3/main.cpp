@@ -17,7 +17,7 @@
 
 #include "table_first.h"
 
-using table_processor_type = table_processor<first::table_t, table_cache_memory<std::unordered_map>>;
+using table_processor_type = table_processor<first::table_t, table_cache_memory<std::map>, true>;
 using table_cache_type = typename table_processor_type::cache_type;
 using table_result_type = typename table_processor_type::result_type;
 
@@ -83,15 +83,32 @@ void compare_results(const YAML::Node& n, table_result_type& results)
 void process_table(const YAML::Node& n, table_cache_type& tc)
 {
 	first::table_t table {n};
-	table.dump();
 	if (!table.is_valid())
 	{
+		table.dump();
 		return;
 	}
 
+//	{
+//		table_processor_type::moves_type res_moves;
+//		table_processor_type tp {tc};
+//		table.simplify();
+//		table.dump();
+//		auto result {tp.process_table(table, &res_moves)};
+
+//		std::cout << "NS tricks : " << static_cast<unsigned>(result) << std::endl;
+//		std::cout << "Moves     : ";
+//		for (const auto& m : res_moves)
+//		{
+//			std::cout << m << "(" << static_cast<unsigned>(m.tricks()) << ") ";
+//		}
+//		std::cout << std::endl;
+//	}
+
 	{
+		table.dump();
 		table_processor_type tp {tc};
-		auto results {tp.process_table(table)};
+		auto results {tp.process_table_full(table)};
 
 		double ips {static_cast<double>(tp.total_iterations()) / static_cast<double>(tp.total_duration())};
 		std::cout << "Total took " << (tp.total_duration() / 1000) << " milliseconds ("
